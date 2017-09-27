@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>One more step :: open-in</title>
+    <style>
+      body {
+        font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+        font-size: 13px;
+        line-height: 1.3em;
+        color: #242729;
+        margin: 0;
+      }
+      h1 {
+        color: #777;
+        background-color: #eee;
+        padding: 30px 10px;
+        margin: 0;
+        font-size: 24px;
+        font-weight: normal;
+      }
+      p {
+        padding: 10px;
+        margin: 0 0 10px 0;
+      }
+      input {
+        padding: 20px;
+        color: #777;
+        background-color: #eee;
+        border: none;
+        font-size: 120%;
+        outline: none;
+        cursor: pointer;
+      }
+      input:active {
+        opacity: 0.5;
+      }
+      .note {
+        color: #777;
+        background-color: #eee;
+        font-size: 90%;
+      }
+      .flex {
+        display: flex;
+        height: 100px;
+        align-items: center;
+        justify-content: center;
+      }
+      body[data-os=windows] .linux {
+        display: none;
+      }
+      body[data-os=linux] .windows {
+        display: none;
+      }
+      body[data-step="1"] .step1 {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+      a,
+      a:visited {
+        color: #06c;
+        text-decoration: none;
+      }
+      .guide {
+        padding-left: 10px;
+      }
+      .guide ul {
+        margin: 5px;
+      }
+      #notify {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 300px;
+      }
+      #notify>div {
+        display: flex;
+        align-items: center;
+        padding: 10px 10px 10px 40px;
+        border: solid 1px #ccc;
+        background-position: left 10px center;
+        background-repeat: no-repeat;
+        background-size: 20px;
+        margin: 5px 0;
+      }
+      #notify>div[data-type=success] {
+        background-image: url('success.svg');
+        background-color: #abf8b6;
+        color: 006f00#;
+        border-color: #30d053;
+      }
+      #notify>div[data-type=error] {
+        background-image: url('error.svg');
+        background-color: #ff787d;
+        color: #fff;
+        border-color: #ff3857;
+      }
+      #notify>div[data-type=info] {
+        background-image: url('info.svg');
+        background-color: #ffea9f;
+        color: #744b00;
+        border-color: #ffcd17;
+      }
+
+      body[data-installed=true] #steps>li {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+      body[data-installed=true] #alternative {
+        font-weight: bold;
+        color: red;
+      }
+      body[data-installed=true] .canhide {
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>One last step</h1>
+    <p>For the extension to work there is one extra step. Please download, unzip and install the native client.</p>
+    <ul id="steps">
+      <li class="step1">Click <a href="#" data-cmd="download">here</a> to download the package for you OS or click <a href="https://github.com/andy-portmen/native-client/releases" target="_blank">here</a> to browse all available download options.</li>
+      <li>Extract the downloaded package in a local directory</li>
+      <li class="linux">Now open a terminal in the root directory and run <code>./install.sh</code></li>
+      <li class="windows">Now double-click the <code>install.bat</code> file</li>
+    </ul>
+    <div class="flex">
+      <input type="button" data-cmd="check" value="Check Connection">
+    </div>
+    <p class="note canhide">The installer script copies a few files to two different locations for your browser to be able to detect this native client. If you already have NodeJS in your system, the installed version of NodeJS will be used. So please make sure you have an up-to-date version of NodeJS installed. If you don't have this application, the portable version will be used. Read more <a target="_blank" href="https://github.com/andy-portmen/native-client">here</a>.</p>
+    <p class="note canhide">To completely remove this native client, run <code class="linux">./uninstall.sh</code><code class="windows">uninstall.bat</code>.</p>
+    <p class="note">To make sure the native client is accessible, click on the "<a href="#" data-cmd="check">Check Connection</a>" button. <span id="alternative">If you still get this page even when the "Check Button" reports successful connection, it means the application cannot be accessed (path is not correct in the <a href="#" data-cmd="options">options page</a>)</span>. If the path to the executable is correct and the native client is connected, you can debug the connection by <a target="_blank" href="https://www.chromium.org/for-testers/enable-logging">enabling console logs</a>.</p>
+
+    <div class="guide canhide">
+      Installation Guide:
+      <ul>
+        <li>Windows: <a href="https://www.youtube.com/watch?v=18jAqTXBiZA" target="_blank">YouTube</a></li>
+        <li>Mac &amp; Linux: <a href="https://www.youtube.com/watch?v=bB4Bj_APg4g" target="_blank">YouTube</a></li>
+      </ul>
+    </div>
+    <div id="notify"></div>
+    <script src="index.js"></script>
+  </body>
+</html>

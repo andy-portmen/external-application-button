@@ -1,0 +1,46 @@
+{
+  "manifest_version":2,
+  "version":"0.2.2",
+  "name":"External Application Button",
+  "description":"A highly customizable external application button and context-menu items",
+  "permissions":[
+    "storage",
+    "tabs",
+    "contextMenus",
+    "nativeMessaging",
+    "downloads",
+    "notifications",
+    "https://api.github.com/repos/andy-portmen/native-client/releases/latest"
+  ],
+  "homepage_url": "http://add0n.com/external-application-button.html?from=context",
+  "background":{
+    "persistent": false,
+    "scripts":[
+      "termlib_parser.js",
+      "common.js"
+    ]
+  },
+  "options_ui": {
+    "page": "data/options/index.html",
+    "chrome_style": true
+  },
+  "browser_action":{
+    "default_icon": {
+      "16": "data/icons/16.png",
+      "32": "data/icons/32.png",
+      "64": "data/icons/64.png"
+    }
+  },
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png"
+  },
+  "applications": {
+    "gecko": {
+      "id": "{65b77238-bb05-470a-a445-ec0efe1d66c4}",
+      "strict_min_version": "52.0"
+    }
+  }
+}

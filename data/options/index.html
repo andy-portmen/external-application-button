@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Options Page</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+     <div vbox pack=center>
+      <table id="app">
+        <colgroup>
+          <col width=110>
+          <col>
+          <col width="74">
+        </colgroup>
+        <tr>
+          <td>Display name</td>
+          <td colspan="2"><input type="text" data-id="name"></td>
+        </tr>
+        <tr>
+          <td>Executable name<sup>1</sup></pre></td>
+          <td><input type="text" placeholder="absolute path of an executable" data-id="path"></td>
+          <td>
+            <div class="placeholder">&nbsp;Examples
+              <ul>
+                <li data-name="Open in Firefox" data-path="C:\Program Files (x86)\Mozilla Firefox\firefox.exe" data-args="[HREF]"  data-cmd="example">Open in Firefox (Windows)</li>
+                <li data-name="Open in Firefox" data-path="open" data-args="-a firefox [HREF]"  data-cmd="example">Open in Firefox (Mac)</li>
+                <li data-name="Open in Firefox" data-path="firefox" data-args="[HREF]"  data-cmd="example">Open in Firefox (Linux)</li>
+                <li data-name="Open in VLC" data-path="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" data-args="[HREF]"  data-cmd="example">Open in VLC (Windows)</li>
+                <li data-name="Open in VLC" data-path="open" data-args="-a VLC [HREF]"  data-cmd="example">Open in VLC (Mac)</li>
+                <li data-name="Open in VLC" data-path="vlc" data-args="[HREF]"  data-cmd="example">Open in VLC (Linux)</li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Arguments</td>
+          <td>
+            <input type="text" placeholder="command-line arguments to pass to the executable" data-id="arguments">
+          </td>
+          <td>
+            <div class="placeholder">&nbsp;Reserved
+              <ul>
+                <li data-value="[HREF]" data-cmd="insert">Entire URL (page, image, ...)</li>
+                <li data-value="[HOSTNAME]" data-cmd="insert">URL's host-name</li>
+                <li data-value="[PATHNAME]" data-cmd="insert">URL's path-name</li>
+                <li data-value="[HASH]" data-cmd="insert">URL's hash tag</li>
+                <li data-value="[PROTOCOL]" data-cmd="insert">URL's protocol (http, https, ftp)</li>
+                <li data-value="[SELECTIONTEXT]" data-cmd="insert">Selection Text (context menu)</li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Placement</td>
+          <td colspan="2">
+            <table>
+              <colgroup>
+                <col width="120">
+                <col>
+              </colgroup>
+              <tr>
+                <td><label><input type="checkbox" data-id="toolbar"> Toolbar button</label></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><label>Context Menu<sup>3</sup></label></td>
+                <td data-id="context">
+                  <label><input type="checkbox" value="page">Page Context</label>
+                  <br>
+                  <label><input type="checkbox" value="frame">Frame Context</label>
+                  <br>
+                  <label><input type="checkbox" value="selection">Selection Context</label>
+                  <br>
+                  <label><input type="checkbox" value="link">Link Context</label>
+                  <br>
+                  <label><input type="checkbox" value="image">Image Context</label>
+                  <br>
+                  <label><input type="checkbox" value="video">Video Context</label>
+                  <br>
+                  <label><input type="checkbox" value="audio">Audio Context</label>
+                  <br>
+                  <label firefox><input type="checkbox" value="tab">Tab Context</label>
+                  <br>
+                  <input data-id="pattern" type="text" placeholder="Matching pattern (*://*/*, ftp://*/*, file://*/*)">
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td><a target="_blank" href="https://www.iconfinder.com/search/?q=browser&minimum=32&maximum=32&price=free">Icon</a> (32x32)</td>
+          <td colspan="2"><input type="file" data-id="icon"></td>
+        </tr>
+        <tr>
+          <td>Ignore errors</td>
+          <td colspan="2">
+            <label><input type="checkbox" data-id="errors"> (do not alert application errors)</label>
+          </td>
+        </tr>
+        <tr>
+          <td>Quotation</td>
+          <td colspan="2">
+            <label><input type="checkbox" data-id="quotes"> Surround arguments with quote characters</label>
+          </td>
+        </tr>
+      </table>
+      <p>
+        <input type="button" value="Test Arguments" data-cmd="test" id="test">
+        <input type="button" value="Add Application" data-cmd="add" id="add">
+        <span id="message"></span>
+      </p>
+     </div>
+    <div hbox pack=center>
+      List of applications<sup>2</sup>:&nbsp;
+      <select flex="1" id="list"></select>
+      <input type="button" value="Remove" disabled="true" id="remove" data-cmd="remove">
+    </div>
+    <p class="notes">
+      1. If application is known by PATH environment variable, there is no need for its absolute path.
+      <br />
+      2. To change the active toolbar application, use right-click over toolbar menu
+      <br>
+      3. Pattern is comma separated list of regular expression url matchers
+    </p>
+    <iframe id="preview" src="blank.html"></iframe>
+    <script src="index.js"></script>
+  </body>
+</html>

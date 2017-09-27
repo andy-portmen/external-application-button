@@ -1,0 +1,132 @@
+body {
+  font-family: arial,sans-serif;
+  font-size: 13px;
+  margin: 0 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 500px;
+}
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+select {
+  width: 100%;
+}
+select,
+input[type=button],
+input[type=text] {
+  height: 24px;
+  line-height: 24px;
+  border: solid 1px #ccc;
+}
+input[type=text] {
+  box-sizing: border-box;
+  border: solid 1px #ccc;
+  outline: none;
+  width: 100%;
+  background-color: transparent;
+  text-indent: 5px;
+}
+input[type=text]:focus {
+  border-color: blue;
+}
+input[type=button] {
+  background-color: #fff;
+  line-height: 8px;
+  outline: none;
+  cursor: pointer;
+}
+body>div:first-child {
+  flex: 1;
+  min-height: 300px;
+}
+code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0 3px;
+}
+#app>tbody>tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+td, th {
+  height: 32px;
+  white-space: nowrap;
+}
+th {
+  border-bottom: 3px #ccc solid;
+}
+.placeholder {
+  background: url('down.svg') right -2px center no-repeat;
+  background-size: 13px;
+  padding-right: 2px;
+  cursor: pointer;
+  position: relative;
+}
+.placeholder>ul {
+  position: absolute;
+  top: 15px;
+  right: 0;
+  background-color: #fff;
+  border: solid 1px #ccc;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: none;
+  z-index: 2;
+  font-size: 90%;
+}
+.placeholder li {
+  padding: 2px 0 2px 5px;
+  width: 180px;
+}
+.placeholder li:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.placeholder:hover ul {
+  display: block;
+}
+.notes {
+  font-size: 80%;
+}
+
+[hbox] {
+  display: flex;
+  flex-direction: row;
+}
+[vbox] {
+  display: flex;
+  flex-direction: column;
+}
+[flex="1"] {
+  flex: 1;
+}
+[pack=center] {
+  align-items: center;
+}
+
+#preview {
+  position: absolute;
+  border:  solid 1px #ccc;
+  box-shadow: 0 0 0 10000000px rgba(0,0,0,0.3);
+  margin: auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: #fff;
+  display: none;
+  width: 80%;
+  height: 80%;
+}
+
+[firefox] {
+  display: none;
+}
+@-moz-document url-prefix() {
+  [firefox] {
+    display: inline-block;
+  }
+}
