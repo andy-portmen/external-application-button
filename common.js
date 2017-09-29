@@ -122,8 +122,16 @@ function update() {
 }
 
 function argv(app, url, selectionText) {
+  try {
+    url = new URL(url);
+  }
+  catch (e) {
+    url = {
+      href: url
+    };
+  }
   const termref = {
-    lineBuffer: app.args.replace(/\[HREF\]/g, url)
+    lineBuffer: app.args.replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
       .replace(/\[PATHNAME\]/g, url.pathname)
       .replace(/\[HASH\]/g, url.hash)
@@ -147,7 +155,7 @@ function argv(app, url, selectionText) {
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    response(argv(request.app, new URL('http://example.com/index.html'), 'Sample selected text'));
+    response(argv(request.app, 'http://example.com/index.html', 'Sample selected text'));
   }
 });
 
@@ -161,42 +169,33 @@ function execute(app, url, selectionText) {
 }
 
 chrome.contextMenus.onClicked.addListener(info => {
-  let id = info.menuItemId;
+  const id = info.menuItemId;
   if (id.startsWith('change-to-')) {
     chrome.storage.local.set({
       active: id.replace('change-to-', '')
     });
   }
   else {
-    id = id.replace('-page', '').replace('-link', '');
     chrome.storage.local.get({
       apps: {}
     }, prefs => {
-      const app = prefs.apps[id];
+      const app = prefs.apps[id.replace('-page', '').replace('-link', '')];
       const selectionText = info.selectionText;
       let url = info.pageUrl;
       if (typeof app.context === 'string') {
         app.context = [app.context];
       }
-      if (app.context.indexOf('page') !== -1) {
+      if (id.endsWith('-page')) {
         url = info.pageUrl;
       }
-      else if (app.context.indexOf('frame') !== -1) {
-        url = info.frameUrl;
+      else { // ends with -link
+        if (info.mediaType) {
+          url = info.srcUrl || info.linkUrl || info.frameUrl || info.pageUrl;
+        }
+        else {
+          url = info.linkUrl || info.frameUrl || info.pageUrl;
+        }
       }
-      else if (app.context.indexOf('selection') !== -1) {
-        url = info.frameUrl || info.pageUrl;
-      }
-      else if (app.context.indexOf('link') !== -1) {
-        url = info.linkUrl || info.frameUrl || info.pageUrl;
-      }
-      else if (
-        app.context.indexOf('image') !== -1 ||
-        app.context.indexOf('video') !== -1 ||
-        app.context.indexOf('audio') !== -1) {
-        url = info.srcUrl || info.linkUrl || info.frameUrl || info.pageUrl;
-      }
-      url = new URL(url);
       execute(app, url, selectionText);
     });
   }
@@ -219,12 +218,7 @@ chrome.browserAction.onClicked.addListener(tab => {
     apps: {}
   }, prefs => {
     if (prefs.active) {
-      let url = {};
-      try {
-        url = new URL(tab.url);
-      }
-      catch (e) {}
-      execute(prefs.apps[prefs.active], url);
+      execute(prefs.apps[prefs.active], tab.url);
     }
     else {
       chrome.runtime.openOptionsPage();
@@ -238,6 +232,9 @@ chrome.storage.local.get('version', prefs => {
   const isFirefox = navigator.userAgent.indexOf('Firefox') !== -1;
   if (isFirefox ? !prefs.version : prefs.version !== version) {
     chrome.storage.local.set({version}, () => {
+      if (prefs.version === '0.2.3') {
+        return;
+      }
       chrome.tabs.create({
         url: 'http://add0n.com/external-application-button.html?version=' + version +
           '&type=' + (prefs.version ? ('upgrade&p=' + prefs.version) : 'install')
