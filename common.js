@@ -175,21 +175,28 @@ chrome.contextMenus.onClicked.addListener(info => {
       const app = prefs.apps[id];
       const selectionText = info.selectionText;
       let url = info.pageUrl;
-      if (app.context === 'page') {
+      if (typeof app.context === 'string') {
+        app.context = [app.context];
+      }
+      if (app.context.indexOf('page') !== -1) {
         url = info.pageUrl;
       }
-      else if (app.context === 'frame') {
+      else if (app.context.indexOf('frame') !== -1) {
         url = info.frameUrl;
       }
-      else if (app.context === 'selection') {
+      else if (app.context.indexOf('selection') !== -1) {
         url = info.frameUrl || info.pageUrl;
       }
-      else if (app.context === 'link') {
+      else if (app.context.indexOf('link') !== -1) {
         url = info.linkUrl || info.frameUrl || info.pageUrl;
       }
-      else if (app.context === 'image' || app.context === 'video' || app.context === 'audio') {
+      else if (
+        app.context.indexOf('image') !== -1 ||
+        app.context.indexOf('video') !== -1 ||
+        app.context.indexOf('audio') !== -1) {
         url = info.srcUrl || info.linkUrl || info.frameUrl || info.pageUrl;
       }
+      url = new URL(url);
       execute(app, url, selectionText);
     });
   }
