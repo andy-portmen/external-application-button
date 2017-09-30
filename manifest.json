@@ -36,5 +36,11 @@
     "32": "data/icons/32.png",
     "64": "data/icons/64.png",
     "128": "data/icons/128.png"
+  },
+  "applications": {
+    "gecko": {
+      "id": "{65b77238-bb05-470a-a445-ec0efe1d66c4}",
+      "strict_min_version": "52.0"
+    }
   }
 }

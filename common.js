@@ -189,13 +189,14 @@ chrome.contextMenus.onClicked.addListener(info => {
         url = info.pageUrl;
       }
       else { // ends with -link
-        if (info.mediaType) {
+        if (info.mediaType && app.context.indexOf('link') === -1) {
           url = info.srcUrl || info.linkUrl || info.frameUrl || info.pageUrl;
         }
         else {
           url = info.linkUrl || info.frameUrl || info.pageUrl;
         }
       }
+      console.log(url);
       execute(app, url, selectionText);
     });
   }
