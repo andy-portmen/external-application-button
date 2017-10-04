@@ -27,10 +27,11 @@ function show(msg) {
   id = window.setTimeout(() => message.textContent = '', 2000);
 }
 
-function update(value = 'blank') {
+function update(value) {
   list.textContent = '';
   chrome.storage.local.get({
-    apps: {}
+    apps: {},
+    save: ''
   }, prefs => {
     prefs.apps = Object.assign({
       blank: {
@@ -43,7 +44,15 @@ function update(value = 'blank') {
       option.textContent = prefs.apps[id].name;
       list.appendChild(option);
     });
-    list.value = value;
+    if (value) {
+      list.value = value;
+    }
+    else if (prefs.save && prefs.apps[prefs.save]) {
+      list.value = prefs.save;
+    }
+    else {
+      list.value = 'blank';
+    }
     list.dispatchEvent(new Event('change'));
   });
 }
@@ -178,6 +187,11 @@ list.addEventListener('change', () => {
   const disabled = list.selectedIndex === -1 || list.selectedIndex === 0;
   remove.disabled = disabled;
   add.value = disabled ? 'Add Application' : 'Update Application';
+
+  chrome.storage.local.set({
+    save: list.value
+  });
+
   if (!disabled) {
     chrome.storage.local.get({
       apps: {}
@@ -202,7 +216,7 @@ list.addEventListener('change', () => {
       app.dataset.id = list.value;
       if (prefs.apps[list.value].toolbar) {
         chrome.storage.local.set({
-          active: list.value
+          active: list.value,
         });
       }
     });

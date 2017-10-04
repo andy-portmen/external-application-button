@@ -3,11 +3,11 @@
 
 var application = 'com.add0n.node';
 
-var notify = message => chrome.notifications.create(null, {
+var notify = e => chrome.notifications.create(null, {
   type: 'basic',
   iconUrl: '/data/icons/48.png',
   title: 'Save all Images',
-  message
+  message: e.message || e
 });
 
 function error(response) {
@@ -29,6 +29,41 @@ function response(res) {
       url: '/data/helper/index.html'
     });
   }
+}
+
+function download(url) {
+  console.log(url);
+  if (/google\.[^./]+\/url?/.test(url)) {
+    const tmp = /url=([^&]+)/.exec(url);
+    if (tmp && tmp.length) {
+      url = decodeURIComponent(tmp[1]);
+    }
+  }
+  return new Promise((resolve, reject) => {
+    chrome.downloads.download({url}, id => {
+      function observe(d) {
+        if (d.id === id && d.state) {
+          if (d.state.current === 'complete' || d.state.current === 'interrupted') {
+            chrome.downloads.onChanged.removeListener(observe);
+            if (d.state.current === 'complete') {
+              chrome.downloads.search({id}, ([d]) => {
+                if (d) {
+                  resolve(d);
+                }
+                else {
+                  reject('I am not able to find the downloaded file!');
+                }
+              });
+            }
+            else {
+              reject('The downloading job got interrupted');
+            }
+          }
+        }
+      }
+      chrome.downloads.onChanged.addListener(observe);
+    });
+  });
 }
 
 function update() {
@@ -87,7 +122,7 @@ function update() {
           chrome.contextMenus.create(obj, () => {
             const lastError = chrome.runtime.lastError;
             if (lastError) {
-              notify(lastError.message, contexts);
+              notify(lastError);
             }
           });
         }
@@ -130,42 +165,54 @@ function argv(app, url, selectionText) {
       href: url
     };
   }
-  const termref = {
-    lineBuffer: app.args.replace(/\[HREF\]/g, url.href)
-      .replace(/\[HOSTNAME\]/g, url.hostname)
-      .replace(/\[PATHNAME\]/g, url.pathname)
-      .replace(/\[HASH\]/g, url.hash)
-      .replace(/\[PROTOCOL\]/g, url.protocol)
-      .replace(/\[SELECTIONTEXT\]/g, selectionText)
-      .replace(/\\/g, '\\\\')
-  };
-  const parser = new Parser();
-  parser.parseLine(termref);
 
-  if (app.quotes) {
-    termref.argv = termref.argv.map((a, i) => {
-      if (termref.argQL[i]) {
-        return termref.argQL[i] + a + termref.argQL[i];
-      }
-      return a;
-    });
+  function step(downloadedPath = '') {
+    const termref = {
+      lineBuffer: app.args.replace(/\[HREF\]/g, url.href)
+        .replace(/\[HOSTNAME\]/g, url.hostname)
+        .replace(/\[PATHNAME\]/g, url.pathname)
+        .replace(/\[HASH\]/g, url.hash)
+        .replace(/\[PROTOCOL\]/g, url.protocol)
+        .replace(/\[SELECTIONTEXT\]/g, selectionText)
+        .replace(/\[DOWNLOADED_PATH\]/g, downloadedPath)
+        .replace(/\\/g, '\\\\')
+    };
+    const parser = new Parser();
+    parser.parseLine(termref);
+
+    if (app.quotes) {
+      termref.argv = termref.argv.map((a, i) => {
+        if (termref.argQL[i]) {
+          return termref.argQL[i] + a + termref.argQL[i];
+        }
+        return a;
+      });
+    }
+    return termref.argv;
   }
-  return termref.argv;
+
+  if (app.args.indexOf('[DOWNLOADED_PATH]') === -1) {
+    return Promise.resolve(step());
+  }
+  else {
+    return download(url.href).then(d => step(d.filename)).catch(e => notify(e));
+  }
 }
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    response(argv(request.app, 'http://example.com/index.html', 'Sample selected text'));
+    argv(request.app, 'http://example.com/index.html', 'Sample selected text').then(response).catch(e => notify(e));
+    return true;
   }
 });
 
 function execute(app, url, selectionText) {
-  chrome.runtime.sendNativeMessage(application, {
+  argv(app, url, selectionText).then(args => chrome.runtime.sendNativeMessage(application, {
     cmd: 'exec',
     command: app.path,
-    arguments: argv(app, url, selectionText),
+    arguments: args,
     properties: app.quotes ? {windowsVerbatimArguments: true} : {}
-  }, app.errors ? () => {} : response);
+  }, app.errors ? () => {} : response)).catch(e => notify(e));
 }
 
 chrome.contextMenus.onClicked.addListener(info => {
@@ -186,7 +233,7 @@ chrome.contextMenus.onClicked.addListener(info => {
         app.context = [app.context];
       }
       if (id.endsWith('-page')) {
-        url = info.pageUrl;
+        url = info.pageUrl || info.frameUrl;
       }
       else { // ends with -link
         if (info.mediaType && app.context.indexOf('link') === -1) {
@@ -196,7 +243,6 @@ chrome.contextMenus.onClicked.addListener(info => {
           url = info.linkUrl || info.frameUrl || info.pageUrl;
         }
       }
-      console.log(url);
       execute(app, url, selectionText);
     });
   }
@@ -233,9 +279,6 @@ chrome.storage.local.get('version', prefs => {
   const isFirefox = navigator.userAgent.indexOf('Firefox') !== -1;
   if (isFirefox ? !prefs.version : prefs.version !== version) {
     chrome.storage.local.set({version}, () => {
-      if (prefs.version === '0.2.3') {
-        return;
-      }
       chrome.tabs.create({
         url: 'http://add0n.com/external-application-button.html?version=' + version +
           '&type=' + (prefs.version ? ('upgrade&p=' + prefs.version) : 'install')
