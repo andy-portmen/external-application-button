@@ -16,7 +16,8 @@ var form = {
   pattern: app.querySelector('[data-id=pattern]'),
   icon: app.querySelector('[data-id=icon]'),
   errors: app.querySelector('[data-id=errors]'),
-  quotes: app.querySelector('[data-id=quotes]')
+  quotes: app.querySelector('[data-id=quotes]'),
+  closeme: app.querySelector('[data-id=closeme]')
 };
 
 var id;
@@ -58,7 +59,7 @@ function update(value) {
 }
 update();
 
-function save({id, icon, errors, quotes, name, path, args, toolbar, context, pattern}) {
+function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, context, pattern}) {
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   chrome.storage.local.get({
     apps: {}
@@ -67,6 +68,7 @@ function save({id, icon, errors, quotes, name, path, args, toolbar, context, pat
       icon,
       errors,
       quotes,
+      closeme,
       name,
       path,
       args,
@@ -102,12 +104,13 @@ function collect(callback) {
   const pattern = form.pattern.value;
   const errors = form.errors.checked;
   const quotes = form.quotes.checked;
+  const closeme = form.closeme.checked;
   const icon = form.icon.files[0];
   if (!icon && !app.dataset.file) {
     return show('"Icon" is mandatory');
   }
 
-  const s = {id, name, errors, quotes, path, args, toolbar, context, pattern};
+  const s = {id, name, errors, quotes, closeme, path, args, toolbar, context, pattern};
   if (icon) {
     if (icon.size > 5 * 1024) {
       return show('"Icon" is too big! use 16x16 PNG.');
@@ -199,6 +202,7 @@ list.addEventListener('change', () => {
       form.name.value = prefs.apps[list.value].name;
       form.errors.checked = prefs.apps[list.value].errors;
       form.quotes.checked = prefs.apps[list.value].quotes;
+      form.closeme.checked = prefs.apps[list.value].closeme;
       form.path.value = prefs.apps[list.value].path;
       form.args.value = prefs.apps[list.value].args;
       form.toolbar.checked = prefs.apps[list.value].toolbar;

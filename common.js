@@ -32,7 +32,6 @@ function response(res) {
 }
 
 function download(url) {
-  console.log(url);
   if (/google\.[^./]+\/url?/.test(url)) {
     const tmp = /url=([^&]+)/.exec(url);
     if (tmp && tmp.length) {
@@ -206,16 +205,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
 });
 
-function execute(app, url, selectionText) {
-  argv(app, url, selectionText).then(args => chrome.runtime.sendNativeMessage(application, {
+function execute(app, tab, selectionText) {
+  argv(app, tab.url, selectionText).then(args => chrome.runtime.sendNativeMessage(application, {
     cmd: 'exec',
     command: app.path,
     arguments: args,
     properties: app.quotes ? {windowsVerbatimArguments: true} : {}
-  }, app.errors ? () => {} : response)).catch(e => notify(e));
+  }, r => {
+    if (app.closeme) {
+      chrome.tabs.remove(tab.id);
+    }
+    if (!app.errors) {
+      response(r);
+    }
+  })).catch(e => notify(e));
 }
 
-chrome.contextMenus.onClicked.addListener(info => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   const id = info.menuItemId;
   if (id.startsWith('change-to-')) {
     chrome.storage.local.set({
@@ -243,7 +249,10 @@ chrome.contextMenus.onClicked.addListener(info => {
           url = info.linkUrl || info.frameUrl || info.pageUrl;
         }
       }
-      execute(app, url, selectionText);
+      execute(app, {
+        url,
+        id: tab.id
+      }, selectionText);
     });
   }
 });
@@ -265,7 +274,7 @@ chrome.browserAction.onClicked.addListener(tab => {
     apps: {}
   }, prefs => {
     if (prefs.active) {
-      execute(prefs.apps[prefs.active], tab.url);
+      execute(prefs.apps[prefs.active], tab);
     }
     else {
       chrome.runtime.openOptionsPage();
