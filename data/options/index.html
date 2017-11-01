@@ -48,6 +48,7 @@
                 <li data-value="[PROTOCOL]" data-cmd="insert">URL's protocol (http, https, ftp)</li>
                 <li data-value="[SELECTIONTEXT]" data-cmd="insert">Selection Text (context menu)</li>
                 <li data-value="[DOWNLOADED_PATH]" data-cmd="insert">Download then insert local path</li>
+                <li data-value="[PROMPT]" data-cmd="insert">Ask for user input</li>
               </ul>
             </div>
           </td>
@@ -113,7 +114,8 @@
         </tr>
       </table>
       <p>
-        <input type="button" value="Test Arguments" data-cmd="test" id="test">
+        <input type="button" value="Clear blocked list" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
+        <input type="button" value="Test Arguments" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable">
         <input type="button" value="Add Application" data-cmd="add" id="add">
         <span id="message"></span>
       </p>

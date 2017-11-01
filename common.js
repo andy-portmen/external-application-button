@@ -174,6 +174,9 @@ function argv(app, url, selectionText) {
         .replace(/\[PROTOCOL\]/g, url.protocol)
         .replace(/\[SELECTIONTEXT\]/g, selectionText)
         .replace(/\[DOWNLOADED_PATH\]/g, downloadedPath)
+        .replace(/\[FILENAME\]/g, app.filename)
+        .replace(/\[REFERRER\]/g, app.referrer)
+        .replace(/\[PROMPT\]/g, () => window.prompt('User input'))
         .replace(/\\/g, '\\\\')
     };
     const parser = new Parser();
@@ -203,6 +206,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     argv(request.app, 'http://example.com/index.html', 'Sample selected text').then(response).catch(e => notify(e));
     return true;
   }
+  else if (request.method === 'notify') {
+    notify(request.message);
+  }
 });
 
 function execute(app, tab, selectionText) {
@@ -220,6 +226,35 @@ function execute(app, tab, selectionText) {
     }
   })).catch(e => notify(e));
 }
+chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
+  console.log(request);
+  chrome.storage.local.get({
+    external_allowed: [],
+    external_denied: [],
+  }, prefs => {
+    if (prefs.external_denied.indexOf(sender.id) !== -1) {
+      return response(false);
+    }
+    if (prefs.external_allowed.indexOf(sender.id) === -1) {
+      if (window.confirm(`An external application with ID "${sender.id}" requested a new connection.
+
+Should I allow this application to execute OS level commands?`)) {
+        chrome.storage.local.set({
+          external_allowed: [...prefs.external_allowed, sender.id]
+        });
+      }
+      else {
+        chrome.storage.local.set({
+          external_denied: [...prefs.external_denied, sender.id]
+        });
+        return response(false);
+      }
+    }
+    execute(request.app, request.tab, request.selectionText);
+    response(true);
+  });
+  return true;
+});
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   const id = info.menuItemId;

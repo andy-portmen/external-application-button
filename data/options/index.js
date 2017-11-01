@@ -164,7 +164,6 @@ document.addEventListener('click', e => {
   }
   else if (cmd === 'test') {
     collect(app => {
-      console.log(app);
       chrome.runtime.sendMessage({
         method: 'parse',
         app
@@ -179,6 +178,15 @@ document.addEventListener('click', e => {
         preview.style.display = 'block';
       });
     });
+  }
+  else if (cmd === 'clear') {
+    chrome.storage.local.set({
+      external_denied: [],
+      external_allowed: [],
+    }, chrome.runtime.sendMessage({
+      method: 'notify',
+      message: 'Both allowed and denied lists are cleared. New external commands will prompt for user approval!'
+    }));
   }
 });
 
