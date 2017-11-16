@@ -180,6 +180,8 @@ function argv(app, url, selectionText) {
         .replace(/\\/g, '\\\\')
     };
     const parser = new Parser();
+    // fixes https://github.com/andy-portmen/external-application-button/issues/5
+    parser.escapeExpressions = {};
     parser.parseLine(termref);
 
     if (app.quotes) {
