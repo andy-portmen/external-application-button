@@ -325,10 +325,12 @@ chrome.storage.local.get('version', prefs => {
   const version = chrome.runtime.getManifest().version;
   const isFirefox = navigator.userAgent.indexOf('Firefox') !== -1;
   if (isFirefox ? !prefs.version : prefs.version !== version) {
+    const p = Boolean(prefs.version);
     chrome.storage.local.set({version}, () => {
       chrome.tabs.create({
         url: 'http://add0n.com/external-application-button.html?version=' + version +
-          '&type=' + (prefs.version ? ('upgrade&p=' + prefs.version) : 'install')
+          '&type=' + (p ? ('upgrade&p=' + prefs.version) : 'install'),
+        active: p === false
       });
     });
   }

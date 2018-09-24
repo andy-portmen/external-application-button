@@ -129,4 +129,7 @@ th {
   [firefox] {
     display: inline-block;
   }
+  [chrome] {
+    display: none;
+  }
 }
