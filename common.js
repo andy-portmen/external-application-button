@@ -50,12 +50,12 @@ function download(url) {
                   resolve(d);
                 }
                 else {
-                  reject('I am not able to find the downloaded file!');
+                  reject(Error('I am not able to find the downloaded file!'));
                 }
               });
             }
             else {
-              reject('The downloading job got interrupted');
+              reject(Error('The downloading job got interrupted'));
             }
           }
         }
@@ -148,14 +148,53 @@ function update() {
         chrome.contextMenus.create({
           id: 'change-to-' + id,
           title: prefs.apps[id].name,
-          contexts: ['browser_action'],
+          contexts: ['browser_action']
         });
       });
     });
   });
 }
 
-function argv(app, url, selectionText) {
+async function argv(app, url, selectionText, tabId) {
+  let downloadedPath = '';
+  let userAgent = app.userAgent || '';
+  let referrer = app.referrer || '';
+  let cookie = app.cookie || '';
+
+  if (tabId && app.args.indexOf('[USERAGENT]') !== -1 && !userAgent) {
+    await new Promise(resolve => chrome.tabs.executeScript(tabId, {
+      runAt: 'document_start',
+      code: 'navigator.userAgent'
+    }, arr => {
+      if (arr && arr[0]) {
+        userAgent = arr[0];
+      }
+      resolve();
+    }));
+  }
+  if (tabId && app.args.indexOf('[REFERRER]') !== -1 && !referrer) {
+    await new Promise(resolve => chrome.tabs.executeScript(tabId, {
+      runAt: 'document_start',
+      code: 'document.referrer'
+    }, arr => {
+      if (arr && arr[0]) {
+        referrer = arr[0];
+      }
+      resolve();
+    }));
+  }
+  if (tabId && app.args.indexOf('[COOKIE]') !== -1 && !cookie) {
+    await new Promise(resolve => chrome.tabs.executeScript(tabId, {
+      runAt: 'document_start',
+      code: 'document.cookie'
+    }, arr => {
+      if (arr && arr[0]) {
+        cookie = arr[0];
+      }
+      resolve();
+    }));
+  }
+
   try {
     url = new URL(url);
   }
@@ -165,7 +204,7 @@ function argv(app, url, selectionText) {
     };
   }
 
-  function step(downloadedPath = '') {
+  function step() {
     const termref = {
       lineBuffer: app.args.replace(/\[HREF\]/g, url.href)
         .replace(/\[HOSTNAME\]/g, url.hostname)
@@ -175,8 +214,10 @@ function argv(app, url, selectionText) {
         .replace(/\[SELECTIONTEXT\]/g, selectionText)
         .replace(/\[DOWNLOADED_PATH\]/g, downloadedPath)
         .replace(/\[FILENAME\]/g, app.filename)
-        .replace(/\[REFERRER\]/g, app.referrer)
-        .replace(/\[PROMPT\]/g, () => window.prompt('User input'))
+        .replace(/\[REFERRER\]/g, referrer)
+        .replace(/\[USERAGENT\]/g, userAgent)
+        .replace(/\[COOKIE\]/g, cookie)
+        .replace(/\[PROMPT\]/g, () => window.prompt('User Input'))
         .replace(/\\/g, '\\\\')
     };
     const parser = new Parser();
@@ -199,7 +240,10 @@ function argv(app, url, selectionText) {
     return Promise.resolve(step());
   }
   else {
-    return download(url.href).then(d => step(d.filename)).catch(e => notify(e));
+    return download(url.href).then(d => {
+      downloadedPath = d.filename;
+      step();
+    }).catch(e => notify(e));
   }
 }
 
@@ -214,7 +258,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 });
 
 function execute(app, tab, selectionText) {
-  argv(app, tab.url, selectionText).then(args => chrome.runtime.sendNativeMessage(application, {
+  argv(app, tab.url, selectionText, tab.id).then(args => chrome.runtime.sendNativeMessage(application, {
     cmd: 'exec',
     command: app.path,
     arguments: args,
@@ -230,9 +274,10 @@ function execute(app, tab, selectionText) {
 }
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
+    console.log(request, sender, response);
     chrome.storage.local.get({
       external_allowed: [],
-      external_denied: [],
+      external_denied: []
     }, prefs => {
       if (prefs.external_denied.indexOf(sender.id) !== -1) {
         return response(false);
@@ -295,10 +340,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-(function(callback) {
-  chrome.runtime.onInstalled.addListener(callback);
-  chrome.runtime.onStartup.addListener(callback);
-})(update);
+chrome.runtime.onInstalled.addListener(update);
+chrome.runtime.onStartup.addListener(update);
 
 chrome.storage.onChanged.addListener(prefs => {
   if (prefs.active || prefs.apps) {
@@ -321,21 +364,28 @@ chrome.browserAction.onClicked.addListener(tab => {
 });
 
 // FAQs & Feedback
-chrome.storage.local.get('version', prefs => {
-  const version = chrome.runtime.getManifest().version;
-  const isFirefox = navigator.userAgent.indexOf('Firefox') !== -1;
-  if (isFirefox ? !prefs.version : prefs.version !== version) {
-    const p = Boolean(prefs.version);
-    chrome.storage.local.set({version}, () => {
-      chrome.tabs.create({
-        url: 'http://add0n.com/external-application-button.html?version=' + version +
-          '&type=' + (p ? ('upgrade&p=' + prefs.version) : 'install'),
-        active: p === false
-      });
-    });
-  }
-});
 {
-  const {name, version} = chrome.runtime.getManifest();
-  chrome.runtime.setUninstallURL('http://add0n.com/feedback.html?name=' + name + '&version=' + version);
+  const {onInstalled, setUninstallURL, getManifest} = chrome.runtime;
+  const {name, version} = getManifest();
+  const page = getManifest().homepage_url;
+  onInstalled.addListener(({reason, previousVersion}) => {
+    chrome.storage.local.get({
+      'faqs': true,
+      'last-update': 0
+    }, prefs => {
+      if (reason === 'install' || (prefs.faqs && reason === 'update')) {
+        const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
+        if (doUpdate && previousVersion !== version) {
+          chrome.tabs.create({
+            url: page + '?version=' + version +
+              (previousVersion ? '&p=' + previousVersion : '') +
+              '&type=' + reason,
+            active: reason === 'install'
+          });
+          chrome.storage.local.set({'last-update': Date.now()});
+        }
+      }
+    });
+  });
+  setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
 }

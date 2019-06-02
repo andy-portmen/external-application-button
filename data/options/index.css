@@ -1,5 +1,4 @@
 body {
-  font-family: arial,sans-serif;
   font-size: 13px;
   margin: 0 10px;
   box-sizing: border-box;
@@ -47,7 +46,7 @@ code {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 0 3px;
 }
-#app>tbody>tr:nth-child(even) {
+table.tb>tbody>tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.03);
 }
 td, th {
@@ -56,6 +55,13 @@ td, th {
 }
 th {
   border-bottom: 3px #ccc solid;
+}
+label {
+  display: flex;
+  align-items: center;
+}
+label input[type=checkbox] {
+  margin-right: 5px;
 }
 .placeholder {
   background: url('down.svg') right -2px center no-repeat;

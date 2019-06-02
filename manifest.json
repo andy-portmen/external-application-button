@@ -4,15 +4,14 @@
   "name":"External Application Button",
   "description":"A highly customizable external application button and context-menu items",
   "permissions":[
+    "activeTab",
     "storage",
-    "tabs",
     "contextMenus",
     "nativeMessaging",
     "downloads",
-    "notifications",
-    "https://api.github.com/repos/andy-portmen/native-client/releases/latest"
+    "notifications"
   ],
-  "homepage_url": "http://add0n.com/external-application-button.html?from=context",
+  "homepage_url": "https://add0n.com/external-application-button.html",
   "background":{
     "persistent": false,
     "scripts":[

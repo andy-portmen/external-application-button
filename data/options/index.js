@@ -107,7 +107,7 @@ function collect(callback) {
   const closeme = form.closeme.checked;
   const icon = form.icon.files[0];
   if (!icon && !app.dataset.file) {
-    return show('"Icon" is mandatory');
+    app.dataset.file = '/data/icons/app.png';
   }
 
   const s = {id, name, errors, quotes, closeme, path, args, toolbar, context, pattern};
@@ -182,7 +182,7 @@ document.addEventListener('click', e => {
   else if (cmd === 'clear') {
     chrome.storage.local.set({
       external_denied: [],
-      external_allowed: [],
+      external_allowed: []
     }, chrome.runtime.sendMessage({
       method: 'notify',
       message: 'Both allowed and denied lists are cleared. New external commands will prompt for user approval!'
@@ -228,7 +228,7 @@ list.addEventListener('change', () => {
       app.dataset.id = list.value;
       if (prefs.apps[list.value].toolbar) {
         chrome.storage.local.set({
-          active: list.value,
+          active: list.value
         });
       }
     });
@@ -238,3 +238,15 @@ list.addEventListener('change', () => {
     delete app.dataset.id;
   }
 });
+
+// support
+document.getElementById('support').addEventListener('click', () => chrome.tabs.create({
+  url: chrome.runtime.getManifest().homepage_url + '?rd=donate'
+}));
+
+document.getElementById('faqs').addEventListener('change', e => chrome.storage.local.set({
+  faqs: e.target.checked
+}));
+chrome.storage.local.get({
+  faqs: true
+}, prefs => document.getElementById('faqs').checked = prefs.faqs);

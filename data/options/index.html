@@ -6,13 +6,16 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
-     <div vbox pack=center>
-      <table id="app">
+     <div vbox>
+      <table id="app" class="tb">
         <colgroup>
           <col width=110>
           <col>
           <col width="74">
         </colgroup>
+        <tr>
+          <td colspan="3"><h3>Application Setup</h3></td>
+        </tr>
         <tr>
           <td>Display name</td>
           <td colspan="2"><input type="text" data-id="name"></td>
@@ -49,6 +52,9 @@
                 <li data-value="[SELECTIONTEXT]" data-cmd="insert">Selection Text (context menu)</li>
                 <li data-value="[DOWNLOADED_PATH]" data-cmd="insert">Download then insert local path</li>
                 <li data-value="[PROMPT]" data-cmd="insert" chrome>Ask for user input</li>
+                <li data-value="[REFERRER]" data-cmd="insert" chrome>Get referrer from the active tab</li>
+                <li data-value="[USERAGENT]" data-cmd="insert" chrome>Get User-Agent from the active tab</li>
+                <li data-value="[COOKIE]" data-cmd="insert" chrome>Get cookie from the active tab</li>
               </ul>
             </div>
           </td>
@@ -69,21 +75,13 @@
                 <td><label>Context Menu<sup>3</sup></label></td>
                 <td data-id="context">
                   <label><input type="checkbox" value="page">Page Context</label>
-                  <br>
                   <label><input type="checkbox" value="frame">Frame Context</label>
-                  <br>
                   <label><input type="checkbox" value="selection">Selection Context</label>
-                  <br>
                   <label><input type="checkbox" value="link">Link Context</label>
-                  <br>
                   <label><input type="checkbox" value="image">Image Context</label>
-                  <br>
                   <label><input type="checkbox" value="video">Video Context</label>
-                  <br>
                   <label><input type="checkbox" value="audio">Audio Context</label>
-                  <br>
                   <label firefox><input type="checkbox" value="tab">Tab Context</label>
-                  <br>
                   <input data-id="pattern" type="text" placeholder="Matching pattern (*://*/*, ftp://*/*, file://*/*)">
                 </td>
               </tr>
@@ -113,26 +111,53 @@
           </td>
         </tr>
       </table>
+      <div id="explore"></div>
       <p>
-        <input type="button" value="Clear blocked list" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
-        <input type="button" value="Test Arguments" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable">
-        <input type="button" value="Add Application" data-cmd="add" id="add">
-        <span id="message"></span>
+        <div style="margin-bottom: 10px;">
+          <input type="button" value="Support Development" id="support">
+        </div>
+        <div>
+          <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable"><sup>4</sup>
+          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
+          <span id="message"></span>
+          <input type="button" value="Add Application" data-cmd="add" id="add" style="float: right">
+        </div>
       </p>
-     </div>
+    </div>
     <div hbox pack=center>
       List of applications<sup>2</sup>:&nbsp;
       <select flex="1" id="list"></select>
       <input type="button" value="Remove" disabled="true" id="remove" data-cmd="remove">
     </div>
+    <table class="tb">
+      <colgroup>
+        <col width=110>
+        <col>
+        <col width="74">
+      </colgroup>
+      <tr>
+        <td colspan="3"><h3>Misc</h3></td>
+      </tr>
+      <tr>
+        <td>
+          FAQs page
+        </td>
+        <td colspan="2">
+          <label><input type="checkbox" id="faqs"> Open FAQs page on updates</label>
+        </td>
+      </tr>
+    </table>
     <p class="notes">
-      1. If application is known by PATH environment variable, there is no need for its absolute path.
+      1. If the application is known by the PATH environment variable, there is no need to enter its absolute path.
       <br />
-      2. To change the active toolbar application, use right-click over toolbar menu
+      2. To change the active application in the browser toolbar area, use the right-click context menu over the toolbar button.
       <br>
-      3. Pattern is comma separated list of regular expression url matchers
+      3. This is a comma-separated list of <a href="https://developer.chrome.com/apps/match_patterns">valid wildcard patterns</a> to limit the context menu display only on a particular list of URLs.
+      <br>
+      4. Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
     </p>
     <iframe id="preview" src="blank.html"></iframe>
     <script src="index.js"></script>
+    <script async src="matched.js"></script>
   </body>
 </html>
