@@ -250,3 +250,52 @@ document.getElementById('faqs').addEventListener('change', e => chrome.storage.l
 chrome.storage.local.get({
   faqs: true
 }, prefs => document.getElementById('faqs').checked = prefs.faqs);
+// export
+document.getElementById('export').addEventListener('click', () => {
+  chrome.storage.local.get(null, prefs => {
+    const text = JSON.stringify(prefs, null, '\t');
+    const blob = new Blob([text], {type: 'application/json'});
+    const objectURL = URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'), {
+      href: objectURL,
+      type: 'application/json',
+      download: 'external-application-button-preferences.json'
+    }).dispatchEvent(new MouseEvent('click'));
+    setTimeout(() => URL.revokeObjectURL(objectURL));
+  });
+});
+// import
+document.getElementById('import').addEventListener('click', () => {
+  const fileInput = document.createElement('input');
+  fileInput.style.display = 'none';
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.acceptCharset = 'utf-8';
+
+  document.body.appendChild(fileInput);
+  fileInput.initialValue = fileInput.value;
+  fileInput.onchange = readFile;
+  fileInput.click();
+
+  function readFile() {
+    if (fileInput.value !== fileInput.initialValue) {
+      const file = fileInput.files[0];
+      if (file.size > 100e6) {
+        console.warn('100MB backup? I don\'t believe you.');
+        return;
+      }
+      const fReader = new FileReader();
+      fReader.onloadend = event => {
+        fileInput.remove();
+        const json = JSON.parse(event.target.result);
+        chrome.storage.local.clear(() => {
+          chrome.storage.local.set(json, () => {
+            window.close();
+            chrome.runtime.reload();
+          });
+        });
+      };
+      fReader.readAsText(file, 'utf-8');
+    }
+  }
+});

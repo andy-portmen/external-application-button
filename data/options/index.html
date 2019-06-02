@@ -17,11 +17,11 @@
           <td colspan="3"><h3>Application Setup</h3></td>
         </tr>
         <tr>
-          <td>Display name</td>
+          <td>Display Name</td>
           <td colspan="2"><input type="text" data-id="name"></td>
         </tr>
         <tr>
-          <td>Executable name<sup>1</sup></pre></td>
+          <td>Executable Name<sup>1</sup></pre></td>
           <td><input type="text" placeholder="absolute path of an executable" data-id="path"></td>
           <td>
             <div class="placeholder">&nbsp;Examples
@@ -93,7 +93,7 @@
           <td colspan="2"><input type="file" data-id="icon"></td>
         </tr>
         <tr>
-          <td>Ignore errors</td>
+          <td>Ignore Errors</td>
           <td colspan="2">
             <label><input type="checkbox" data-id="errors"> Do not alert application errors</label>
           </td>
@@ -105,7 +105,7 @@
           </td>
         </tr>
         <tr>
-          <td>Close tab</td>
+          <td>Close Tab</td>
           <td colspan="2">
             <label><input type="checkbox" data-id="closeme"> Close the source tab when command is executed</label>
           </td>
@@ -114,12 +114,16 @@
       <div id="explore"></div>
       <p>
         <div style="margin-bottom: 10px;">
+          <input type="button" value="Import Settings" id="import"><sup>5</sup>
+          <input type="button" value="Export Settings" id="export">
+        </div>
+        <div style="margin-bottom: 10px;">
           <input type="button" value="Support Development" id="support">
+          <span id="message" style="float: right;"></span>
         </div>
         <div>
           <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable"><sup>4</sup>
-          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
-          <span id="message"></span>
+          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button"><sup>6</sup>
           <input type="button" value="Add Application" data-cmd="add" id="add" style="float: right">
         </div>
       </p>
@@ -155,6 +159,10 @@
       3. This is a comma-separated list of <a href="https://developer.chrome.com/apps/match_patterns">valid wildcard patterns</a> to limit the context menu display only on a particular list of URLs.
       <br>
       4. Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
+      <br>
+      5. This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.
+      <br>
+      6. This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.
     </p>
     <iframe id="preview" src="blank.html"></iframe>
     <script src="index.js"></script>
