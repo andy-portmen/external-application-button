@@ -242,7 +242,7 @@ async function argv(app, url, selectionText, tabId) {
   else {
     return download(url.href).then(d => {
       downloadedPath = d.filename;
-      step();
+      return step();
     }).catch(e => notify(e));
   }
 }
@@ -274,7 +274,6 @@ function execute(app, tab, selectionText) {
 }
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
-    console.log(request, sender, response);
     chrome.storage.local.get({
       external_allowed: [],
       external_denied: []

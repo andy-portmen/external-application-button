@@ -1,6 +1,6 @@
 {
   "manifest_version":2,
-  "version":"0.2.9",
+  "version":"0.3.1",
   "name":"External Application Button",
   "description":"A highly customizable external application button and context-menu items",
   "permissions":[
@@ -40,7 +40,7 @@
   "applications": {
     "gecko": {
       "id": "{65b77238-bb05-470a-a445-ec0efe1d66c4}",
-      "strict_min_version": "52.0"
+      "strict_min_version": "57.0"
     }
   }
 }
