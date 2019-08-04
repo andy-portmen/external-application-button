@@ -1,8 +1,8 @@
 {
   "manifest_version":2,
-  "version":"0.3.1",
+  "version":"0.3.2",
   "name":"External Application Button",
-  "description":"A highly customizable external application button and context-menu items",
+  "description":"Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
   "permissions":[
     "activeTab",
     "storage",
@@ -28,19 +28,17 @@
     "default_icon": {
       "16": "data/icons/16.png",
       "32": "data/icons/32.png",
+      "48": "data/icons/48.png",
       "64": "data/icons/64.png"
     }
   },
   "icons": {
     "16": "data/icons/16.png",
     "32": "data/icons/32.png",
+    "48": "data/icons/48.png",
     "64": "data/icons/64.png",
-    "128": "data/icons/128.png"
-  },
-  "applications": {
-    "gecko": {
-      "id": "{65b77238-bb05-470a-a445-ec0efe1d66c4}",
-      "strict_min_version": "57.0"
-    }
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
   }
 }

@@ -1,12 +1,12 @@
 'use strict';
 
-var app = document.getElementById('app');
-var list = document.getElementById('list');
-var message = document.getElementById('message');
-var remove = document.getElementById('remove');
-var add = document.getElementById('add');
-var preview = document.getElementById('preview');
-var form = {
+const app = document.getElementById('app');
+const list = document.getElementById('list');
+const message = document.getElementById('message');
+const remove = document.getElementById('remove');
+const add = document.getElementById('add');
+const preview = document.getElementById('preview');
+const form = {
   path: app.querySelector('[data-id=path]'),
   name: app.querySelector('[data-id=name]'),
   args: app.querySelector('[data-id=arguments]'),
@@ -14,13 +14,14 @@ var form = {
   menuitem: app.querySelector('[data-id=menuitem]'),
   context: app.querySelector('[data-id=context]'),
   pattern: app.querySelector('[data-id=pattern]'),
+  filters: app.querySelector('[data-id=filters]'),
   icon: app.querySelector('[data-id=icon]'),
   errors: app.querySelector('[data-id=errors]'),
   quotes: app.querySelector('[data-id=quotes]'),
   closeme: app.querySelector('[data-id=closeme]')
 };
 
-var id;
+let id;
 
 function show(msg) {
   window.clearTimeout(id);
@@ -59,8 +60,9 @@ function update(value) {
 }
 update();
 
-function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, context, pattern}) {
+function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, context, pattern, filters}) {
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
+  filters = (filters || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   chrome.storage.local.get({
     apps: {}
   }, prefs => {
@@ -74,7 +76,8 @@ function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, con
       args,
       toolbar,
       context,
-      pattern
+      pattern,
+      filters
     };
     chrome.storage.local.set(prefs, () => {
       update(id);
@@ -102,6 +105,7 @@ function collect(callback) {
   }
   const context = [...form.context.querySelectorAll(':checked')].map(e => e.value);
   const pattern = form.pattern.value;
+  const filters = form.filters.value;
   const errors = form.errors.checked;
   const quotes = form.quotes.checked;
   const closeme = form.closeme.checked;
@@ -110,7 +114,7 @@ function collect(callback) {
     app.dataset.file = '/data/icons/app.png';
   }
 
-  const s = {id, name, errors, quotes, closeme, path, args, toolbar, context, pattern};
+  const s = {id, name, errors, quotes, closeme, path, args, toolbar, context, pattern, filters};
   if (icon) {
     if (icon.size > 5 * 1024) {
       return show('"Icon" is too big! use 16x16 PNG.');
@@ -223,6 +227,7 @@ list.addEventListener('change', () => {
         form.context.querySelector(`[value="${value}"]`).checked = true;
       });
       form.pattern.value = prefs.apps[list.value].pattern || '';
+      form.filters.value = prefs.apps[list.value].filters || '';
       app.dataset.file = prefs.apps[list.value].icon;
       form.icon.value = '';
       app.dataset.id = list.value;

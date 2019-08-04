@@ -49,7 +49,8 @@ code {
 table.tb>tbody>tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.03);
 }
-td, th {
+#app>tbody>tr>td,
+#app>tbody>tr>th {
   height: 32px;
   white-space: nowrap;
 }
@@ -114,7 +115,7 @@ label input[type=checkbox] {
 }
 
 #preview {
-  position: absolute;
+  position: fixed;
   border:  solid 1px #ccc;
   box-shadow: 0 0 0 10000000px rgba(0,0,0,0.3);
   margin: auto;

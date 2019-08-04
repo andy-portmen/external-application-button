@@ -1,12 +1,12 @@
 /* globals Parser */
 'use strict';
 
-var application = 'com.add0n.node';
+const application = 'com.add0n.node';
 
-var notify = e => chrome.notifications.create(null, {
+const notify = e => chrome.notifications.create({
   type: 'basic',
   iconUrl: '/data/icons/48.png',
-  title: 'Save all Images',
+  title: chrome.runtime.getManifest().name,
   message: e.message || e
 });
 
@@ -104,8 +104,7 @@ function update() {
           return context.length;
         }
       }).forEach(id => {
-        const anyWhere = ['*://*/*', 'file://*/*', 'ftp://*/*'];
-        let pattern = anyWhere;
+        let pattern = ['*://*/*', 'file://*/*', 'ftp://*/*'];
         if (prefs.apps[id].pattern) {
           const tmp = prefs.apps[id].pattern;
           pattern = tmp.split(/\s*,\s*/);
@@ -135,13 +134,26 @@ function update() {
           });
         }
         if (linkContexts.length) {
-          add({
+          const o = {
             id: id + '-link',
             title: prefs.apps[id].name,
             contexts: linkContexts,
-            documentUrlPatterns: anyWhere,
             targetUrlPatterns: pattern
-          });
+          };
+          if (prefs.apps[id].filters) {
+            o.documentUrlPatterns = prefs.apps[id].filters.split(/\s*,\s*/);
+          }
+          try {
+            add(o);
+          }
+          catch (e) {
+            console.error(e, o);
+            notify(`Cannot create context entry for "${prefs.apps[id].name}"
+
+
+--
+${e.message}`);
+          }
         }
       });
       Object.keys(prefs.apps).filter(k => prefs.apps[k].toolbar).forEach(id => {

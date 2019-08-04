@@ -74,15 +74,50 @@
               <tr>
                 <td><label>Context Menu<sup>3</sup></label></td>
                 <td data-id="context">
-                  <label><input type="checkbox" value="page">Page Context</label>
-                  <label><input type="checkbox" value="frame">Frame Context</label>
-                  <label><input type="checkbox" value="selection">Selection Context</label>
-                  <label><input type="checkbox" value="link">Link Context</label>
-                  <label><input type="checkbox" value="image">Image Context</label>
-                  <label><input type="checkbox" value="video">Video Context</label>
-                  <label><input type="checkbox" value="audio">Audio Context</label>
-                  <label firefox><input type="checkbox" value="tab">Tab Context</label>
-                  <input data-id="pattern" type="text" placeholder="Matching pattern (*://*/*, ftp://*/*, file://*/*)">
+                  <table>
+                    <colgroup>
+                      <col width="20">
+                      <col>
+                    </colgroup>
+                    <tr>
+                      <td><input type="checkbox" value="page" id="sub-1"></td>
+                      <td><label for="sub-1">Page Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="frame"></td>
+                      <td><label for="sub-2">Frame Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="selection" id="sub3"></td>
+                      <td><label for="sub3">Selection Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="link" id="sub-4"></td>
+                      <td><label for="sub-4">Link Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="image" id="sub-5"></td>
+                      <td><label for="sub-5">Image Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="video" id="sub-6"></td>
+                      <td><label for="sub-6">Video Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="audio" id="sub-7"></td>
+                      <td><label for="sub-7">Audio Context</label></td>
+                    </tr>
+                    <tr firefox>
+                      <td><input type="checkbox" value="tab" id="sub-8"></td>
+                      <td><label for="sub-8">Tab Context</label></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
             </table>
@@ -111,7 +146,7 @@
           </td>
         </tr>
       </table>
-      <div id="explore"></div>
+      <div id="explore" cols="4"></div>
       <p>
         <div style="margin-bottom: 10px;">
           <input type="button" value="Import Settings" id="import"><sup>5</sup>
