@@ -279,6 +279,11 @@ function execute(app, tab, selectionText) {
     if (app.closeme) {
       chrome.tabs.remove(tab.id);
     }
+    if (app.changestate) {
+      chrome.windows.update(tab.windowId, {
+        state: app.changestate
+      });
+    }
     if (!app.errors) {
       response(r);
     }

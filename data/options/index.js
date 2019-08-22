@@ -18,7 +18,8 @@ const form = {
   icon: app.querySelector('[data-id=icon]'),
   errors: app.querySelector('[data-id=errors]'),
   quotes: app.querySelector('[data-id=quotes]'),
-  closeme: app.querySelector('[data-id=closeme]')
+  closeme: app.querySelector('[data-id=closeme]'),
+  changestate: app.querySelector('[data-id=changestate]')
 };
 
 let id;
@@ -60,7 +61,7 @@ function update(value) {
 }
 update();
 
-function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, context, pattern, filters}) {
+function save({id, icon, errors, quotes, closeme, changestate, name, path, args, toolbar, context, pattern, filters}) {
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   filters = (filters || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   chrome.storage.local.get({
@@ -71,6 +72,7 @@ function save({id, icon, errors, quotes, closeme, name, path, args, toolbar, con
       errors,
       quotes,
       closeme,
+      changestate,
       name,
       path,
       args,
@@ -109,12 +111,13 @@ function collect(callback) {
   const errors = form.errors.checked;
   const quotes = form.quotes.checked;
   const closeme = form.closeme.checked;
+  const changestate = form.changestate.value;
   const icon = form.icon.files[0];
   if (!icon && !app.dataset.file) {
     app.dataset.file = '/data/icons/app.png';
   }
 
-  const s = {id, name, errors, quotes, closeme, path, args, toolbar, context, pattern, filters};
+  const s = {id, name, errors, quotes, closeme, changestate, path, args, toolbar, context, pattern, filters};
   if (icon) {
     if (icon.size > 5 * 1024) {
       return show('"Icon" is too big! use 16x16 PNG.');
@@ -215,6 +218,7 @@ list.addEventListener('change', () => {
       form.errors.checked = prefs.apps[list.value].errors;
       form.quotes.checked = prefs.apps[list.value].quotes;
       form.closeme.checked = prefs.apps[list.value].closeme;
+      form.changestate.value = prefs.apps[list.value].changestate || '';
       form.path.value = prefs.apps[list.value].path;
       form.args.value = prefs.apps[list.value].args;
       form.toolbar.checked = prefs.apps[list.value].toolbar;
