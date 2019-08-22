@@ -59,7 +59,9 @@ function update(value) {
     list.dispatchEvent(new Event('change'));
   });
 }
-update();
+chrome.storage.local.get({
+  active: ''
+}, prefs => update(prefs.active));
 
 function save({id, icon, errors, quotes, closeme, changestate, name, path, args, toolbar, context, pattern, filters}) {
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');

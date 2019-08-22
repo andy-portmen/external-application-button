@@ -156,12 +156,21 @@ ${e.message}`);
           }
         }
       });
-      Object.keys(prefs.apps).filter(k => prefs.apps[k].toolbar).forEach(id => {
+      const bi = Object.keys(prefs.apps).filter(k => prefs.apps[k].toolbar);
+      bi.forEach((id, index) => {
         chrome.contextMenus.create({
           id: 'change-to-' + id,
           title: prefs.apps[id].name,
-          contexts: ['browser_action']
+          contexts: ['browser_action'],
+          parentId: (index > 4 && bi.length > 6) ? 'extra' : undefined
         });
+        if (index === 4 && bi.length > 6) {
+          chrome.contextMenus.create({
+            title: 'Extra Applications',
+            id: 'extra',
+            contexts: ['browser_action']
+          });
+        }
       });
     });
   });
