@@ -132,7 +132,7 @@ label input[type=checkbox] {
 [firefox] {
   display: none;
 }
-@-moz-document url-prefix() {
+@media(min--moz-device-pixel-ratio:0) {
   [firefox] {
     display: inline-block;
   }
