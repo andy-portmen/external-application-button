@@ -3,6 +3,8 @@
 
 const application = 'com.add0n.node';
 
+const log = (...args) => true && console.log(...args);
+
 const notify = e => chrome.notifications.create({
   type: 'basic',
   iconUrl: '/data/icons/48.png',
@@ -104,7 +106,7 @@ function update() {
           return context.length;
         }
       }).forEach(id => {
-        let pattern = ['*://*/*', 'file://*/*', 'ftp://*/*'];
+        let pattern = ['*://*/*', 'file://*/*'];
         if (prefs.apps[id].pattern) {
           const tmp = prefs.apps[id].pattern;
           pattern = tmp.split(/\s*,\s*/);
@@ -113,10 +115,11 @@ function update() {
         if (typeof contexts === 'string') {
           contexts = [contexts];
         }
-        const pageContexts = contexts.filter(s => ['page', 'tab', 'selection'].indexOf(s) !== -1);
-        const linkContexts = contexts.filter(s => ['page', 'tab', 'selection'].indexOf(s) === -1);
+        const pageContexts = contexts.filter(s => ['page', 'tab', 'selection', 'password', 'bookmark'].indexOf(s) !== -1);
+        const linkContexts = contexts.filter(s => ['page', 'tab', 'selection', 'password', 'bookmark'].indexOf(s) === -1);
 
         function add(obj) {
+          log(obj);
           chrome.contextMenus.create(obj, () => {
             const lastError = chrome.runtime.lastError;
             if (lastError) {
@@ -125,12 +128,14 @@ function update() {
           });
         }
 
+        const documentUrlPatterns = prefs.apps[id].filters.split(/\s*,\s*/).filter(a => a);
+
         if (pageContexts.length) {
           add({
             id: id + '-page',
             title: prefs.apps[id].name,
             contexts: pageContexts,
-            documentUrlPatterns: pattern
+            documentUrlPatterns: documentUrlPatterns.length ? documentUrlPatterns : pattern
           });
         }
         if (linkContexts.length) {
@@ -140,8 +145,8 @@ function update() {
             contexts: linkContexts,
             targetUrlPatterns: pattern
           };
-          if (prefs.apps[id].filters) {
-            o.documentUrlPatterns = prefs.apps[id].filters.split(/\s*,\s*/);
+          if (documentUrlPatterns.length) {
+            o.documentUrlPatterns = documentUrlPatterns;
           }
           try {
             add(o);
@@ -279,16 +284,17 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 });
 
 function execute(app, tab, selectionText) {
+  log(app, tab, selectionText);
   argv(app, tab.url, selectionText, tab.id).then(args => chrome.runtime.sendNativeMessage(application, {
     cmd: 'exec',
     command: app.path,
     arguments: args,
     properties: app.quotes ? {windowsVerbatimArguments: true} : {}
   }, r => {
-    if (app.closeme) {
+    if (app.closeme && tab.id) {
       chrome.tabs.remove(tab.id);
     }
-    if (app.changestate) {
+    if (app.changestate && tab.windowId) {
       chrome.windows.update(tab.windowId, {
         state: app.changestate
       });
@@ -329,7 +335,13 @@ if (chrome.runtime.onMessageExternal) {
   });
 }
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.bookmarkId) {
+    const node = await new Promise(resolve => chrome.bookmarks.get(info.bookmarkId, ([node]) => resolve(node)));
+    tab = {
+      url: node.url
+    };
+  }
   const id = info.menuItemId;
   if (id.startsWith('change-to-')) {
     chrome.storage.local.set({
@@ -347,7 +359,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         app.context = [app.context];
       }
       if (id.endsWith('-page')) {
-        url = info.pageUrl || info.frameUrl;
+        url = info.pageUrl || info.frameUrl || tab.url;
       }
       else { // ends with -link
         if (info.mediaType && app.context.indexOf('link') === -1) {

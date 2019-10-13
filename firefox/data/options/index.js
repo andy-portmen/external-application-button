@@ -22,6 +22,13 @@ const form = {
   changestate: app.querySelector('[data-id=changestate]')
 };
 
+// hide unsupported items
+[...document.querySelectorAll('[data-id=context] input[type=checkbox]')].forEach(e => {
+  if (chrome.contextMenus.ContextType[e.value.toUpperCase()] === undefined) {
+    e.closest('tr').classList.add('hidden');
+  }
+});
+
 let id;
 
 function show(msg) {

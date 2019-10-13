@@ -88,8 +88,12 @@
                       <td><label for="sub-2">Frame Context</label></td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" value="selection" id="sub3"></td>
-                      <td><label for="sub3">Selection Context</label></td>
+                      <td><input type="checkbox" value="selection" id="sub-3"></td>
+                      <td><label for="sub-3">Selection Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="password" id="sub-9"></td>
+                      <td><label for="sub-9">Password Context</label></td>
                     </tr>
                     <tr>
                       <td><input type="checkbox" value="link" id="sub-4"></td>
@@ -107,15 +111,19 @@
                       <td><input type="checkbox" value="audio" id="sub-7"></td>
                       <td><label for="sub-7">Audio Context</label></td>
                     </tr>
-                    <tr firefox>
+                    <tr>
                       <td><input type="checkbox" value="tab" id="sub-8"></td>
                       <td><label for="sub-8">Tab Context</label></td>
                     </tr>
                     <tr>
-                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
+                      <td><input type="checkbox" value="bookmark" id="sub-10"></td>
+                      <td><label for="sub-10">Bookmark Context</label></td>
                     </tr>
                     <tr>
-                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
+                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"><sup>7</sup></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"><sup>8</sup></td>
                     </tr>
                   </table>
                 </td>
@@ -199,6 +207,7 @@
         </td>
       </tr>
     </table>
+    <hr>
     <p class="notes">
       1. If the application is known by the PATH environment variable, there is no need to enter its absolute path.
       <br />
@@ -211,6 +220,10 @@
       5. This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.
       <br>
       6. This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.
+      <br>
+      7. Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags
+      <br>
+      8. Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword.
     </p>
     <iframe id="preview" src="blank.html"></iframe>
     <script src="index.js"></script>

@@ -4,7 +4,7 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-width: 500px;
+  min-width: 600px;
 }
 table {
   width: 100%;
@@ -38,7 +38,7 @@ input[type=button] {
   outline: none;
   cursor: pointer;
 }
-body>div:first-child {
+body > div:first-child {
   flex: 1;
   min-height: 300px;
 }
@@ -46,11 +46,11 @@ code {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 0 3px;
 }
-table.tb>tbody>tr:nth-child(even) {
+table.tb > tbody > tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.03);
 }
-#app>tbody>tr>td,
-#app>tbody>tr>th {
+#app > tbody > tr > td,
+#app > tbody > tr > th {
   height: 32px;
   white-space: nowrap;
 }
@@ -71,7 +71,7 @@ label input[type=checkbox] {
   cursor: pointer;
   position: relative;
 }
-.placeholder>ul {
+.placeholder > ul {
   position: absolute;
   top: 15px;
   right: 0;
@@ -96,7 +96,10 @@ label input[type=checkbox] {
   display: block;
 }
 .notes {
-  font-size: 80%;
+  font-size: 90%;
+  border-top: dashed 1px #ccc;
+  padding-top: 10px;
+  margin-top: 5px;
 }
 
 [hbox] {
@@ -116,8 +119,8 @@ label input[type=checkbox] {
 
 #preview {
   position: fixed;
-  border:  solid 1px #ccc;
-  box-shadow: 0 0 0 10000000px rgba(0,0,0,0.3);
+  border: solid 1px #ccc;
+  box-shadow: 0 0 0 10000000px rgba(0, 0, 0, 0.3);
   margin: auto;
   left: 0;
   right: 0;
@@ -132,11 +135,6 @@ label input[type=checkbox] {
 [firefox] {
   display: none;
 }
-@media(min--moz-device-pixel-ratio:0) {
-  [firefox] {
-    display: inline-block;
-  }
-  [chrome] {
-    display: none;
-  }
+.hidden {
+  display: none;
 }

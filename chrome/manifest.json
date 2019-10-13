@@ -1,0 +1,44 @@
+{
+  "manifest_version": 2,
+  "version": "0.3.3",
+  "name": "External Application Button",
+  "description": "Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "nativeMessaging",
+    "downloads",
+    "notifications"
+  ],
+  "homepage_url": "https://add0n.com/external-application-button.html",
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "termlib_parser.js",
+      "common.js"
+    ]
+  },
+  "offline_enabled": true,
+  "options_ui": {
+    "page": "data/options/index.html",
+    "chrome_style": true
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "data/icons/16.png",
+      "32": "data/icons/32.png",
+      "48": "data/icons/48.png",
+      "64": "data/icons/64.png"
+    }
+  },
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "48": "data/icons/48.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  }
+}
