@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "name": "External Application Button",
   "description": "Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
   "permissions": [

@@ -3,7 +3,7 @@
 
 const application = 'com.add0n.node';
 
-const log = (...args) => true && console.log(...args);
+const log = (...args) => false && console.log(...args);
 
 const notify = e => chrome.notifications.create({
   type: 'basic',
@@ -371,7 +371,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       }
       execute(app, {
         url,
-        id: tab.id
+        id: tab.id,
+        windowId: tab.windowId
       }, selectionText);
     });
   }
