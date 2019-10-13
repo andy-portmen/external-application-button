@@ -377,8 +377,17 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(update);
-chrome.runtime.onStartup.addListener(update);
+{
+  let called = false;
+  const callback = () => {
+    if (called === false) {
+      called = true;
+      update();
+    }
+  };
+  chrome.runtime.onInstalled.addListener(callback);
+  chrome.runtime.onStartup.addListener(callback);
+}
 
 chrome.storage.onChanged.addListener(prefs => {
   if (prefs.active || prefs.apps) {
