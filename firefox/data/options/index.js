@@ -1,4 +1,10 @@
+/* globals browser */
+
 'use strict';
+
+if (typeof browser === 'object') {
+  chrome.contextMenus = browser.menus;
+}
 
 const app = document.getElementById('app');
 const list = document.getElementById('list');
@@ -10,6 +16,8 @@ const form = {
   path: app.querySelector('[data-id=path]'),
   name: app.querySelector('[data-id=name]'),
   args: app.querySelector('[data-id=arguments]'),
+  pre: app.querySelector('[data-id=pre]'),
+  post: app.querySelector('[data-id=post]'),
   toolbar: app.querySelector('[data-id=toolbar]'),
   menuitem: app.querySelector('[data-id=menuitem]'),
   context: app.querySelector('[data-id=context]'),
@@ -70,7 +78,7 @@ chrome.storage.local.get({
   active: ''
 }, prefs => update(prefs.active));
 
-function save({id, icon, errors, quotes, closeme, changestate, name, path, args, toolbar, context, pattern, filters}) {
+function save({id, icon, errors, quotes, closeme, changestate, name, path, args, pre, post, toolbar, context, pattern, filters}) {
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   filters = (filters || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   chrome.storage.local.get({
@@ -85,6 +93,8 @@ function save({id, icon, errors, quotes, closeme, changestate, name, path, args,
       name,
       path,
       args,
+      pre,
+      post,
       toolbar,
       context,
       pattern,
@@ -109,6 +119,8 @@ function collect(callback) {
     return show('"Executable Name" is mandatory');
   }
   const args = form.args.value;
+  const pre = form.pre.value;
+  const post = form.post.value;
   const toolbar = form.toolbar.checked;
   const menuitem = form.context.querySelector(':checked');
   if (!toolbar && !menuitem) {
@@ -126,7 +138,7 @@ function collect(callback) {
     app.dataset.file = '/data/icons/app.png';
   }
 
-  const s = {id, name, errors, quotes, closeme, changestate, path, args, toolbar, context, pattern, filters};
+  const s = {id, name, errors, quotes, closeme, changestate, path, args, pre, post, toolbar, context, pattern, filters};
   if (icon) {
     if (icon.size > 5 * 1024) {
       return show('"Icon" is too big! use 16x16 PNG.');
@@ -230,6 +242,8 @@ list.addEventListener('change', () => {
       form.changestate.value = prefs.apps[list.value].changestate || '';
       form.path.value = prefs.apps[list.value].path;
       form.args.value = prefs.apps[list.value].args;
+      form.pre.value = prefs.apps[list.value].pre;
+      form.post.value = prefs.apps[list.value].post;
       form.toolbar.checked = prefs.apps[list.value].toolbar;
       [...form.context.querySelectorAll(':checked')].forEach(e => e.checked = false);
       let contexts = prefs.apps[list.value].context;
@@ -317,3 +331,7 @@ document.getElementById('import').addEventListener('click', () => {
     }
   }
 });
+
+document.getElementById('ofq').addEventListener('click', () => chrome.tabs.create({
+  url: chrome.runtime.getManifest().homepage_url
+}));

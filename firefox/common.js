@@ -1,9 +1,13 @@
-/* globals Parser */
+/* globals Parser, browser */
 'use strict';
 
 const application = 'com.add0n.node';
 
-const log = (...args) => false && console.log(...args);
+if (typeof browser === 'object') {
+  chrome.contextMenus = browser.menus;
+}
+
+const log = (...args) => true && console.log(...args);
 
 const notify = e => chrome.notifications.create({
   type: 'basic',
@@ -21,7 +25,7 @@ Output: ${response.stdout}
 Error: ${response.stderr}`);
 }
 
-function response(res) {
+function response(res, tabId, frameId, post) {
   // windows batch returns 1
   if (res && (res.code !== 0 && (res.code !== 1 || res.stderr !== ''))) {
     error(res);
@@ -29,6 +33,22 @@ function response(res) {
   else if (!res) {
     chrome.tabs.create({
       url: '/data/helper/index.html'
+    });
+  }
+  else if (post) {
+    const code = post.replace(/\[POST_SCRIPT_CODE\]/g, res.code)
+      .replace(/\[POST_SCRIPT_STDOUT\]/g, res.stdout)
+      .replace(/\[POST_SCRIPT_STDERR\]/g, res.stderr);
+    chrome.tabs.executeScript(tabId, {
+      code,
+      runAt: 'document_start',
+      frameId
+    }, () => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        console.warn(lastError);
+        notify(lastError);
+      }
     });
   }
 }
@@ -123,6 +143,7 @@ function update() {
           chrome.contextMenus.create(obj, () => {
             const lastError = chrome.runtime.lastError;
             if (lastError) {
+              console.warn(lastError);
               notify(lastError);
             }
           });
@@ -181,7 +202,7 @@ ${e.message}`);
   });
 }
 
-async function argv(app, url, selectionText, tabId) {
+async function argv(app, url, selectionText, tabId, pre) {
   let downloadedPath = '';
   let userAgent = app.userAgent || '';
   let referrer = app.referrer || '';
@@ -243,6 +264,7 @@ async function argv(app, url, selectionText, tabId) {
         .replace(/\[REFERRER\]/g, referrer)
         .replace(/\[USERAGENT\]/g, userAgent)
         .replace(/\[COOKIE\]/g, cookie)
+        .replace(/\[PRE_SCRIPT\]/g, pre)
         .replace(/\[PROMPT\]/g, () => window.prompt('User Input'))
         .replace(/\\/g, '\\\\')
     };
@@ -275,7 +297,7 @@ async function argv(app, url, selectionText, tabId) {
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    argv(request.app, 'http://example.com/index.html', 'Sample selected text').then(response).catch(e => notify(e));
+    argv(request.app, 'http://example.com/index.html', 'Sample selected text', 0, 'PRE_SCIPT_OUTPUT').then(response).catch(e => notify(e));
     return true;
   }
   else if (request.method === 'notify') {
@@ -283,26 +305,44 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
 });
 
-function execute(app, tab, selectionText) {
-  log(app, tab, selectionText);
-  argv(app, tab.url, selectionText, tab.id).then(args => chrome.runtime.sendNativeMessage(application, {
-    cmd: 'exec',
-    command: app.path,
-    arguments: args,
-    properties: app.quotes ? {windowsVerbatimArguments: true} : {}
-  }, r => {
-    if (app.closeme && tab.id) {
-      chrome.tabs.remove(tab.id);
-    }
-    if (app.changestate && tab.windowId) {
-      chrome.windows.update(tab.windowId, {
-        state: app.changestate
-      });
-    }
-    if (!app.errors) {
-      response(r);
-    }
-  })).catch(e => notify(e));
+function execute(app, tab, selectionText, frameId) {
+  const next = pre => argv(app, tab.url, selectionText, tab.id, pre)
+    .then(args => chrome.runtime.sendNativeMessage(application, {
+      cmd: 'exec',
+      command: app.path,
+      arguments: args,
+      properties: app.quotes ? {windowsVerbatimArguments: true} : {}
+    }, r => {
+      if (app.closeme && tab.id) {
+        chrome.tabs.remove(tab.id);
+      }
+      if (app.changestate && tab.windowId) {
+        chrome.windows.update(tab.windowId, {
+          state: app.changestate
+        });
+      }
+      if (!app.errors) {
+        response(r, tab.id, frameId, app.post);
+      }
+    })).catch(e => notify(e));
+  if (app.pre) {
+    chrome.tabs.executeScript(tab.id, {
+      frameId,
+      code: app.pre
+    }, arr => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        console.warn(lastError);
+        notify(lastError);
+      }
+      else if (arr.length) {
+        next(arr[0]);
+      }
+      else {
+        next();
+      }
+    });
+  }
 }
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
@@ -328,7 +368,7 @@ if (chrome.runtime.onMessageExternal) {
           return response(false);
         }
       }
-      execute(request.app, request.tab, request.selectionText);
+      execute(request.app, request.tab, request.selectionText, frameId);
       response(true);
     });
     return true;
@@ -373,7 +413,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         url,
         id: tab.id,
         windowId: tab.windowId
-      }, selectionText);
+      }, selectionText, info.frameId);
     });
   }
 });
@@ -402,7 +442,7 @@ chrome.browserAction.onClicked.addListener(tab => {
     apps: {}
   }, prefs => {
     if (prefs.active) {
-      execute(prefs.apps[prefs.active], tab);
+      execute(prefs.apps[prefs.active], tab, '', 0);
     }
     else {
       chrome.runtime.openOptionsPage();
@@ -410,29 +450,29 @@ chrome.browserAction.onClicked.addListener(tab => {
   });
 });
 
-// FAQs & Feedback
+/* FAQs & Feedback */
 {
-  const {onInstalled, setUninstallURL, getManifest} = chrome.runtime;
-  const {name, version} = getManifest();
-  const page = getManifest().homepage_url;
-  onInstalled.addListener(({reason, previousVersion}) => {
-    chrome.storage.local.get({
-      'faqs': true,
-      'last-update': 0
-    }, prefs => {
-      if (reason === 'install' || (prefs.faqs && reason === 'update')) {
-        const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
-        if (doUpdate && previousVersion !== version) {
-          chrome.tabs.create({
-            url: page + '?version=' + version +
-              (previousVersion ? '&p=' + previousVersion : '') +
-              '&type=' + reason,
-            active: reason === 'install'
-          });
-          chrome.storage.local.set({'last-update': Date.now()});
+  const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
+  if (navigator.webdriver !== true) {
+    const page = getManifest().homepage_url;
+    const {name, version} = getManifest();
+    onInstalled.addListener(({reason, previousVersion}) => {
+      management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
+        'faqs': true,
+        'last-update': 0
+      }, prefs => {
+        if (reason === 'install' || (prefs.faqs && reason === 'update')) {
+          const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
+          if (doUpdate && previousVersion !== version) {
+            tabs.create({
+              url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
+              active: reason === 'install'
+            });
+            storage.local.set({'last-update': Date.now()});
+          }
         }
-      }
+      }));
     });
-  });
-  setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
+    setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
+  }
 }

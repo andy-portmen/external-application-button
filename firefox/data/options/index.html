@@ -2,16 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <title>Options Page</title>
+    <title>Options Page :: External Application Button</title>
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
      <div vbox>
       <table id="app" class="tb">
         <colgroup>
-          <col width=110>
           <col>
-          <col width="74">
+          <col>
+          <col>
         </colgroup>
         <tr>
           <td colspan="3"><h3>Application Setup</h3></td>
@@ -21,7 +21,7 @@
           <td colspan="2"><input type="text" data-id="name"></td>
         </tr>
         <tr>
-          <td>Executable Name<sup>1</sup></pre></td>
+          <td>Executable Name</td>
           <td><input type="text" placeholder="absolute path of an executable" data-id="path"></td>
           <td>
             <div class="placeholder">&nbsp;Examples
@@ -34,6 +34,12 @@
                 <li data-name="Open in VLC" data-path="vlc" data-args="[HREF]"  data-cmd="example">Open in VLC (Linux)</li>
               </ul>
             </div>
+          </td>
+        </tr>
+        <tr>
+          <td></td>
+          <td colspan="2">
+            <div colspan="2" class="note">If the application is known by the PATH environment variable, there is no need to enter its absolute path.</div>
           </td>
         </tr>
         <tr>
@@ -55,16 +61,29 @@
                 <li data-value="[REFERRER]" data-cmd="insert">Get referrer from the active tab</li>
                 <li data-value="[USERAGENT]" data-cmd="insert">Get User-Agent from the active tab</li>
                 <li data-value="[COOKIE]" data-cmd="insert">Get cookie from the active tab</li>
+                <li data-value="[PRE_SCRIPT]" data-cmd="insert">Get the output of the pre-script</li>
               </ul>
             </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Pre JavaScript</td>
+          <td colspan="2">
+            <textarea rows="5" placeholder="Execute a JS code on the current frame element before the external application is called. This can be used to extract some data from the frame. Use the [PRE_SCRIPT] keyword to pass this variable to the external application." data-id="pre"></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td>Post JavaScript</td>
+          <td colspan="2">
+            <textarea rows="5" type="text" placeholder="Execute a JS code on the current frame element after the external application is called. The [POST_SCRIPT_CODE], [POST_SCRIPT_STDOUT], and [POST_SCRIPT_STDERR] keywords will be replaced in your JS code with the equivalents." data-id="post"></textarea>
           </td>
         </tr>
         <tr>
           <td>Placement</td>
           <td colspan="2">
             <table>
-              <colgroup>
-                <col width="120">
+              <colgroup id="innerc">
+                <col>
                 <col>
               </colgroup>
               <tr>
@@ -72,7 +91,7 @@
                 <td></td>
               </tr>
               <tr>
-                <td><label>Context Menu<sup>3</sup></label></td>
+                <td><label>Context Menu<sup>1</sup></label></td>
                 <td data-id="context">
                   <table>
                     <colgroup>
@@ -84,7 +103,7 @@
                       <td><label for="sub-1">Page Context</label></td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" value="frame"></td>
+                      <td><input type="checkbox" value="frame" id="sub-2"></td>
                       <td><label for="sub-2">Frame Context</label></td>
                     </tr>
                     <tr>
@@ -116,14 +135,34 @@
                       <td><label for="sub-8">Tab Context</label></td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" value="bookmark" id="sub-10"></td>
-                      <td><label for="sub-10">Bookmark Context</label></td>
+                      <td><input type="checkbox" value="editable" id="sub-11"></td>
+                      <td><label for="sub-11">Editable Context</label></td>
                     </tr>
                     <tr>
-                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"><sup>7</sup></td>
+                      <td><input type="checkbox" value="folder_pane" id="sub-12"></td>
+                      <td><label for="sub-12">Folder Pane Context</label></td>
                     </tr>
                     <tr>
-                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"><sup>8</sup></td>
+                      <td><input type="checkbox" value="message_list" id="sub-13"></td>
+                      <td><label for="sub-13">Message List Context</label></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" value="all" id="sub-14"></td>
+                      <td><label for="sub-14">All Contexts</label></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
+                    </tr>
+                    <tr><td colspan="2">
+                      <div class="note" style="margin: 5px 0;">Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags</div>
+                    </td></tr>
+                    <tr>
+                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2">
+                        <div class="note" style="margin: 5px 0;">Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword.</div>
+                      </td>
                     </tr>
                   </table>
                 </td>
@@ -167,31 +206,39 @@
           </td>
         </tr>
       </table>
-      <div id="explore" cols="4"></div>
-      <p>
+      <div id="explore" data-cols="5"></div>
+      <div>
         <div style="margin-bottom: 10px;">
-          <input type="button" value="Import Settings" id="import"><sup>5</sup>
+          <input type="button" value="Import Settings" id="import">
           <input type="button" value="Export Settings" id="export">
         </div>
+        <div class="note" style="margin-bottom: 10px;">Import Settings: This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.</div>
         <div style="margin-bottom: 10px;">
           <input type="button" value="Support Development" id="support">
+          <input type="button" value="Open FAQs page" id="ofq">
           <span id="message" style="float: right;"></span>
         </div>
         <div>
-          <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable"><sup>4</sup>
-          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button"><sup>6</sup>
-          <input type="button" value="Add Application" data-cmd="add" id="add" style="float: right">
+          <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable">
+          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
         </div>
-      </p>
+        <div class="note" style="margin-top: 10px;">Test Arguments Validity: Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
+
+Clear Blocked List: This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.</div>
+      </div>
+    </div>
+    <div style="margin: 10px 0;">
+      <input type="button" value="Add Application" data-cmd="add" id="add" style="float: right">
     </div>
     <div hbox pack=center>
-      List of applications<sup>2</sup>:&nbsp;
+      List of applications:&nbsp;
       <select flex="1" id="list"></select>
       <input type="button" value="Remove" disabled="true" id="remove" data-cmd="remove">
     </div>
+    <div class="note" style="margin-top: 10px">To change the active application in the browser toolbar area, use the right-click context menu over the toolbar button.</div>
     <table class="tb">
       <colgroup>
-        <col width=110>
+        <col width=130>
         <col>
         <col width="74">
       </colgroup>
@@ -209,21 +256,8 @@
     </table>
     <hr>
     <p class="notes">
-      1. If the application is known by the PATH environment variable, there is no need to enter its absolute path.
-      <br />
-      2. To change the active application in the browser toolbar area, use the right-click context menu over the toolbar button.
+      1. This is a comma-separated list of <a href="https://developer.chrome.com/apps/match_patterns">valid wildcard patterns</a> to limit the context menu display only on a particular list of URLs.
       <br>
-      3. This is a comma-separated list of <a href="https://developer.chrome.com/apps/match_patterns">valid wildcard patterns</a> to limit the context menu display only on a particular list of URLs.
-      <br>
-      4. Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
-      <br>
-      5. This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.
-      <br>
-      6. This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.
-      <br>
-      7. Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags
-      <br>
-      8. Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword.
     </p>
     <iframe id="preview" src="blank.html"></iframe>
     <script src="index.js"></script>
