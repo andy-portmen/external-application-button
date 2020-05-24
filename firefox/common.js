@@ -343,6 +343,9 @@ function execute(app, tab, selectionText, frameId) {
       }
     });
   }
+  else {
+    next();
+  }
 }
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
