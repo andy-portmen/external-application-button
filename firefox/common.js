@@ -7,7 +7,7 @@ if (typeof browser === 'object') {
   chrome.contextMenus = browser.menus;
 }
 
-const log = (...args) => true && console.log(...args);
+const log = (...args) => false && console.log(...args);
 
 const notify = e => chrome.notifications.create({
   type: 'basic',
@@ -135,8 +135,10 @@ function update() {
         if (typeof contexts === 'string') {
           contexts = [contexts];
         }
-        const pageContexts = contexts.filter(s => ['page', 'tab', 'selection', 'password', 'bookmark'].indexOf(s) !== -1);
-        const linkContexts = contexts.filter(s => ['page', 'tab', 'selection', 'password', 'bookmark'].indexOf(s) === -1);
+        const pageContexts = contexts.filter(s => ['page', 'tab', 'selection', 'editable', 'password', 'bookmark']
+          .indexOf(s) !== -1);
+        const linkContexts = contexts.filter(s => ['page', 'tab', 'selection', 'editable', 'password', 'bookmark']
+          .indexOf(s) === -1);
 
         function add(obj) {
           log(obj);
