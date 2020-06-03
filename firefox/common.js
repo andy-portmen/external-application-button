@@ -373,7 +373,7 @@ if (chrome.runtime.onMessageExternal) {
           return response(false);
         }
       }
-      execute(request.app, request.tab, request.selectionText, frameId);
+      execute(request.app, request.tab, request.selectionText, request.frameId || 0);
       response(true);
     });
     return true;
