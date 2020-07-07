@@ -141,6 +141,7 @@ function update() {
           .indexOf(s) === -1);
 
         function add(obj) {
+          obj.contexts = obj.contexts.filter(k => chrome.contextMenus.ContextType[k.toUpperCase()]);
           log(obj);
           chrome.contextMenus.create(obj, () => {
             const lastError = chrome.runtime.lastError;
