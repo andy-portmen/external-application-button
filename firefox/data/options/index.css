@@ -202,3 +202,11 @@ label input[type=checkbox] {
   padding: 5px;
   font-size: 12px;
 }
+
+#placement {
+  background-color: #f3f3f3;
+  padding: 10px 0 10px 10px;
+}
+#placement input {
+  background-color: #fff;
+}

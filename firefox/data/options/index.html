@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <title>Options Page :: External Application Button</title>
     <link rel="stylesheet" href="index.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
      <div vbox>
@@ -81,93 +82,104 @@
         <tr>
           <td>Placement</td>
           <td colspan="2">
-            <table>
-              <colgroup id="innerc">
-                <col>
-                <col>
-              </colgroup>
-              <tr>
-                <td><label><input type="checkbox" data-id="toolbar"> Toolbar button</label></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td><label>Context Menu<sup>1</sup></label></td>
-                <td data-id="context">
-                  <table>
-                    <colgroup>
-                      <col width="20">
-                      <col>
-                    </colgroup>
-                    <tr>
-                      <td><input type="checkbox" value="page" id="sub-1"></td>
-                      <td><label for="sub-1">Page Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="frame" id="sub-2"></td>
-                      <td><label for="sub-2">Frame Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="selection" id="sub-3"></td>
-                      <td><label for="sub-3">Selection Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="password" id="sub-9"></td>
-                      <td><label for="sub-9">Password Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="link" id="sub-4"></td>
-                      <td><label for="sub-4">Link Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="image" id="sub-5"></td>
-                      <td><label for="sub-5">Image Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="video" id="sub-6"></td>
-                      <td><label for="sub-6">Video Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="audio" id="sub-7"></td>
-                      <td><label for="sub-7">Audio Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="tab" id="sub-8"></td>
-                      <td><label for="sub-8">Tab Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="editable" id="sub-11"></td>
-                      <td><label for="sub-11">Editable Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="folder_pane" id="sub-12"></td>
-                      <td><label for="sub-12">Folder Pane Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="message_list" id="sub-13"></td>
-                      <td><label for="sub-13">Message List Context</label></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" value="all" id="sub-14"></td>
-                      <td><label for="sub-14">All Contexts</label></td>
-                    </tr>
-                    <tr>
-                      <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
-                    </tr>
-                    <tr><td colspan="2">
-                      <div class="note" style="margin: 5px 0;">Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
-                    </td></tr>
-                    <tr>
-                      <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
-                    </tr>
-                    <tr>
-                      <td colspan="2">
-                        <div class="note" style="margin: 5px 0;">Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
+            <div id="placement">
+              <table>
+                <colgroup id="innerc">
+                  <col>
+                  <col>
+                </colgroup>
+                <tr>
+                  <td><label style="padding-bottom: 10px;"><input type="checkbox" data-id="toolbar"> Toolbar button</label></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td><label>Context Menu<sup>1</sup></label></td>
+                  <td data-id="context">
+                    <table>
+                      <colgroup>
+                        <col width="20">
+                        <col>
+                      </colgroup>
+                      <tr>
+                        <td><input type="checkbox" value="page" id="sub-1"></td>
+                        <td><label for="sub-1">Page Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="frame" id="sub-2"></td>
+                        <td><label for="sub-2">Frame Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="selection" id="sub-3"></td>
+                        <td><label for="sub-3">Selection Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="password" id="sub-9"></td>
+                        <td><label for="sub-9">Password Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="link" id="sub-4"></td>
+                        <td><label for="sub-4">Link Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="image" id="sub-5"></td>
+                        <td><label for="sub-5">Image Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="video" id="sub-6"></td>
+                        <td><label for="sub-6">Video Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="audio" id="sub-7"></td>
+                        <td><label for="sub-7">Audio Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="tab" id="sub-8"></td>
+                        <td><label for="sub-8">Tab Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="editable" id="sub-11"></td>
+                        <td><label for="sub-11">Editable Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="folder_pane" id="sub-12"></td>
+                        <td><label for="sub-12">Folder Pane Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="message_list" id="sub-13"></td>
+                        <td><label for="sub-13">Message List Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="all" id="sub-14"></td>
+                        <td><label for="sub-14">All Contexts</label></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
+                      </tr>
+                      <tr><td colspan="2">
+                        <div class="note" style="margin: 5px 0;">Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
+                      </td></tr>
+                      <tr>
+                        <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2">
+                          <div class="note" style="margin: 5px 0;">Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td><label style="margin-top: 10px;"><input type="checkbox" data-id="navigation"> Navigation</label></td>
+                  <td><input style="margin-top: 10px;" data-id="redirects" type="text" placeholder="target pattern (*.pdf)"></td>
+                </tr>
+                <tr>
+                  <td colspan="2">
+                    <div class="note" style="margin: 5px 0;">Calls the external application instead of the normal navigation if a filter in this list matches the pattern of the link.</div>
+                  </td>
+                </tr>
+              </table>
+            </div>
           </td>
         </tr>
         <tr>

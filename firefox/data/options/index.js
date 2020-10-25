@@ -23,6 +23,8 @@ const form = {
   context: app.querySelector('[data-id=context]'),
   pattern: app.querySelector('[data-id=pattern]'),
   filters: app.querySelector('[data-id=filters]'),
+  redirects: app.querySelector('[data-id=redirects]'),
+  navigation: app.querySelector('[data-id=navigation]'),
   icon: app.querySelector('[data-id=icon]'),
   errors: app.querySelector('[data-id=errors]'),
   quotes: app.querySelector('[data-id=quotes]'),
@@ -42,7 +44,7 @@ let id;
 function show(msg) {
   window.clearTimeout(id);
   message.textContent = msg;
-  id = window.setTimeout(() => message.textContent = '', 2000);
+  id = window.setTimeout(() => message.textContent = '', 5000);
 }
 
 function update(value) {
@@ -78,9 +80,17 @@ chrome.storage.local.get({
   active: ''
 }, prefs => update(prefs.active));
 
-function save({id, icon, errors, quotes, closeme, changestate, name, path, args, pre, post, toolbar, context, pattern, filters}) {
+function save(o) {
+  const {
+    id, icon, errors, quotes, closeme, changestate, name,
+    path, args, pre, post, toolbar, context
+  } = o;
+  let {pattern, filters, redirects} = o;
+
   pattern = (pattern || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
   filters = (filters || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
+  redirects = (redirects || '').split(/\s*,\s*/).filter((s, i, l) => l.indexOf(s) === i).join(', ');
+
   chrome.storage.local.get({
     apps: {}
   }, prefs => {
@@ -98,7 +108,8 @@ function save({id, icon, errors, quotes, closeme, changestate, name, path, args,
       toolbar,
       context,
       pattern,
-      filters
+      filters,
+      redirects
     };
     chrome.storage.local.set(prefs, () => {
       update(id);
@@ -123,8 +134,9 @@ function collect(callback) {
   const post = form.post.value;
   const toolbar = form.toolbar.checked;
   const menuitem = form.context.querySelector(':checked');
-  if (!toolbar && !menuitem) {
-    return show('Select a placement for this application');
+  const redirects = form.navigation.checked ? form.redirects.value : '';
+  if (!toolbar && !menuitem && redirects === '') {
+    return show('Select a placement for this application, or configure automatic navigation');
   }
   const context = [...form.context.querySelectorAll(':checked')].map(e => e.value);
   const pattern = form.pattern.value;
@@ -138,7 +150,11 @@ function collect(callback) {
     app.dataset.file = '/data/icons/app.png';
   }
 
-  const s = {id, name, errors, quotes, closeme, changestate, path, args, pre, post, toolbar, context, pattern, filters};
+  const s = {
+    id, name, errors, quotes, closeme, changestate, path,
+    args, pre, post, toolbar, context, pattern, filters, redirects
+  };
+
   if (icon) {
     if (icon.size > 5 * 1024) {
       return show('"Icon" is too big! use 16x16 PNG.');
@@ -255,6 +271,10 @@ list.addEventListener('change', () => {
       });
       form.pattern.value = prefs.apps[list.value].pattern || '';
       form.filters.value = prefs.apps[list.value].filters || '';
+      form.redirects.value = prefs.apps[list.value].redirects || '';
+      if (form.redirects.value) {
+        form.navigation.checked = true;
+      }
       app.dataset.file = prefs.apps[list.value].icon;
       form.icon.value = '';
       app.dataset.id = list.value;
@@ -335,3 +355,22 @@ document.getElementById('import').addEventListener('click', () => {
 document.getElementById('ofq').addEventListener('click', () => chrome.tabs.create({
   url: chrome.runtime.getManifest().homepage_url
 }));
+
+// navigation
+form.navigation.addEventListener('change', e => {
+  if (e.target.checked) {
+    chrome.permissions.request({
+      permissions: ['webNavigation'],
+      origins: ['*://*/*']
+    }, granted => {
+      if (granted !== true) {
+        e.target.checked = false;
+      }
+    });
+  }
+});
+form.redirects.addEventListener('input', () => {
+  if (form.navigation.checked === false) {
+    form.navigation.click();
+  }
+});

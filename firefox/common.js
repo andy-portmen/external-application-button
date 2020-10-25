@@ -25,6 +25,68 @@ Output: ${response.stdout}
 Error: ${response.stderr}`);
 }
 
+// navigation
+const navigate = () => chrome.storage.local.get({
+  apps: {}
+}, prefs => {
+  const list = Object.entries(prefs.apps).filter(o => o[1].redirects);
+
+  navigate.cache = list.reduce((p, [id, app]) => {
+    p[id] = app.redirects;
+    return p;
+  }, {});
+  if (list.length) {
+    chrome.webNavigation.onCommitted.removeListener(navigate.observer);
+    chrome.webNavigation.onCommitted.addListener(navigate.observer, {
+      url: [{
+        schemes: ['http', 'https', 'file']
+      }]
+    });
+  }
+});
+navigate.observer = d => chrome.tabs.executeScript(d.tabId, {
+  code: String.raw`
+    const cache = ${JSON.stringify(navigate.cache)}
+
+    function wildcardToRegExp(s) {
+      return new RegExp('^' + s.split(/\*+/).map(regExpEscape).join('.*') + '$');
+    }
+    function regExpEscape(s) {
+      return s.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
+    }
+    const rules = {};
+    for (const [id, links] of Object.entries(cache)) {
+      rules[id] = links.split(/\s*,\s*/).map(wildcardToRegExp);
+    }
+
+    document.addEventListener('click', e => {
+      const a = e.target.closest('[target]') || e.target.closest('a');
+      if (a) {
+        const {href} = a;
+        if (href && (href.startsWith('http') || href.startsWith('file'))) {
+          for (const [id, filters] of Object.entries(rules)) {
+            for (const filter of filters) {
+              console.log(filter);
+              if (filter.test(href)) {
+                chrome.runtime.sendMessage({
+                  method: 'execute',
+                  id,
+                  href: a.href,
+                  selectionText: window.getSelection().toString()
+                });
+                e.preventDefault();
+                e.stopPropagation();
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }, true);
+  `
+});
+navigate();
+
 function response(res, tabId, frameId, post) {
   // windows batch returns 1
   if (res && (res.code !== 0 && (res.code !== 1 || res.stderr !== ''))) {
@@ -202,6 +264,7 @@ ${e.message}`);
         }
       });
     });
+    navigate();
   });
 }
 
@@ -305,6 +368,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   else if (request.method === 'notify') {
     notify(request.message);
+  }
+  else if (request.method === 'execute') {
+    chrome.storage.local.get({
+      apps: {}
+    }, prefs => {
+      const app = prefs.apps[request.id];
+      if (app) {
+        execute(app, {
+          url: request.href,
+          id: sender.tab.id,
+          windowId: sender.tab.windowId
+        }, request.selectionText, sender.frameId);
+      }
+      else {
+        console.warn('app with requested id cannot be found', request.id);
+      }
+    });
   }
 });
 

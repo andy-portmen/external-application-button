@@ -11,6 +11,10 @@
     "downloads",
     "notifications"
   ],
+  "optional_permissions": [
+    "webNavigation",
+    "*://*/*"
+  ],
   "homepage_url": "https://add0n.com/external-application-button.html",
   "background": {
     "persistent": false,
