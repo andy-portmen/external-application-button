@@ -16,6 +16,21 @@ const notify = e => chrome.notifications.create({
   message: e.message || e
 });
 
+const prompt = (message, value = '') => {
+  return new Promise((resolve, reject) => chrome.windows.create({
+    url: 'data/prompt/index.html?message=' + encodeURIComponent(message) + '&value=' + encodeURIComponent(value),
+    type: 'popup',
+    width: 600,
+    height: 200,
+    left: screen.availLeft + Math.round((screen.availWidth - 600) / 2),
+    top: screen.availTop + Math.round((screen.availHeight - 180) / 2)
+  }, w => {
+    prompt.cache[w.id] = {resolve, reject};
+  }));
+};
+prompt.cache = {};
+
+
 function error(response) {
   window.alert(`Something went wrong!
 
@@ -391,6 +406,19 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
     });
   }
+  else if (request.method === 'prompt-resolved') {
+    const o = prompt.cache[sender.tab.windowId];
+    if (o) {
+      const {resolve} = o;
+      delete prompt.cache[sender.tab.windowId];
+      resolve(request.value);
+    }
+  }
+  else if (request.method === 'bring-to-front') {
+    chrome.windows.update(sender.tab.windowId, {
+      focused: true
+    });
+  }
 });
 
 function execute(app, tab, selectionText, frameId) {
@@ -447,26 +475,34 @@ if (chrome.runtime.onMessageExternal) {
       external_allowed: [],
       external_denied: []
     }, prefs => {
+      console.log(prefs);
       if (prefs.external_denied.indexOf(sender.id) !== -1) {
-        return response(false);
+        response(false);
       }
-      if (prefs.external_allowed.indexOf(sender.id) === -1) {
-        if (window.confirm(`An external application with ID "${sender.id}" requested a new connection.
+      else if (prefs.external_allowed.indexOf(sender.id) !== -1) {
+        execute(request.app, request.tab, request.selectionText, request.frameId || 0);
+        response(true);
+      }
+      else {
+        prompt(`An external application with the following ID requested a new connection.
 
-  Should I allow this application to execute OS level commands?`)) {
-          chrome.storage.local.set({
-            external_allowed: [...prefs.external_allowed, sender.id]
-          });
-        }
-        else {
-          chrome.storage.local.set({
-            external_denied: [...prefs.external_denied, sender.id]
-          });
-          return response(false);
-        }
+Should I allow this application to execute OS level commands?`, sender.id).then(v => {
+          console.log(v, sender.id);
+          if (v === sender.id) {
+            chrome.storage.local.set({
+              external_allowed: [...prefs.external_allowed, sender.id]
+            });
+            execute(request.app, request.tab, request.selectionText, request.frameId || 0);
+            response(true);
+          }
+          else {
+            chrome.storage.local.set({
+              external_denied: [...prefs.external_denied, sender.id]
+            });
+            response(false);
+          }
+        });
       }
-      execute(request.app, request.tab, request.selectionText, request.frameId || 0);
-      response(true);
     });
     return true;
   });
