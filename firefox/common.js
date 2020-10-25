@@ -36,12 +36,17 @@ const navigate = () => chrome.storage.local.get({
     return p;
   }, {});
   if (list.length) {
-    chrome.webNavigation.onCommitted.removeListener(navigate.observer);
-    chrome.webNavigation.onCommitted.addListener(navigate.observer, {
-      url: [{
-        schemes: ['http', 'https', 'file']
-      }]
-    });
+    if (chrome.webNavigation) {
+      chrome.webNavigation.onCommitted.removeListener(navigate.observer);
+      chrome.webNavigation.onCommitted.addListener(navigate.observer, {
+        url: [{
+          schemes: ['http', 'https', 'file']
+        }]
+      });
+    }
+    else {
+      console.warn('navigation is configured, but "webNavigation" permission is not granted');
+    }
   }
 });
 navigate.observer = d => chrome.tabs.executeScript(d.tabId, {
@@ -389,25 +394,31 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 });
 
 function execute(app, tab, selectionText, frameId) {
-  const next = pre => argv(app, tab.url, selectionText, tab.id, pre)
-    .then(args => chrome.runtime.sendNativeMessage(application, {
-      cmd: 'exec',
-      command: app.path,
-      arguments: args,
-      properties: app.quotes ? {windowsVerbatimArguments: true} : {}
-    }, r => {
-      if (app.closeme && tab.id) {
-        chrome.tabs.remove(tab.id);
-      }
-      if (app.changestate && tab.windowId) {
-        chrome.windows.update(tab.windowId, {
-          state: app.changestate
-        });
-      }
-      if (!app.errors) {
-        response(r, tab.id, frameId, app.post);
-      }
-    })).catch(e => notify(e));
+  const next = pre => argv(app, tab.url, selectionText, tab.id, pre).then(args => {
+    chrome.runtime.sendNativeMessage(application, {
+      cmd: 'env'
+    }, res => {
+      const env = ((res || {}).env || {});
+      chrome.runtime.sendNativeMessage(application, {
+        cmd: 'exec',
+        command: app.path.replace(/%([^%]+)%/g, (a, b) => env[b] || b),
+        arguments: args,
+        properties: app.quotes ? {windowsVerbatimArguments: true} : {}
+      }, r => {
+        if (app.closeme && tab.id) {
+          chrome.tabs.remove(tab.id);
+        }
+        if (app.changestate && tab.windowId) {
+          chrome.windows.update(tab.windowId, {
+            state: app.changestate
+          });
+        }
+        if (!app.errors) {
+          response(r, tab.id, frameId, app.post);
+        }
+      });
+    });
+  }).catch(e => notify(e));
   if (app.pre) {
     chrome.tabs.executeScript(tab.id, {
       frameId,
@@ -534,6 +545,17 @@ chrome.browserAction.onClicked.addListener(tab => {
       chrome.runtime.openOptionsPage();
     }
   });
+});
+
+/* pre configure */
+chrome.runtime.onInstalled.addListener(e => {
+  if (e.reason === 'install') {
+    const os = navigator.platform.substr(0, 3).toLocaleLowerCase();
+    fetch('configs/' + os + '.json').then(r => r.json()).then(prefs => {
+      console.log('configuring extension for the first run');
+      chrome.storage.local.set(prefs);
+    }).catch(() => {});
+  }
 });
 
 /* FAQs & Feedback */
