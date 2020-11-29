@@ -86,7 +86,6 @@ navigate.observer = d => chrome.tabs.executeScript(d.tabId, {
         if (href && (href.startsWith('http') || href.startsWith('file'))) {
           for (const [id, filters] of Object.entries(rules)) {
             for (const filter of filters) {
-              console.log(filter);
               if (filter.test(href)) {
                 chrome.runtime.sendMessage({
                   method: 'execute',
@@ -289,7 +288,6 @@ ${e.message}`);
 }
 
 async function argv(app, url, selectionText, tabId, pre) {
-  let downloadedPath = '';
   let userAgent = app.userAgent || '';
   let referrer = app.referrer || '';
   let cookie = app.cookie || '';
@@ -337,22 +335,29 @@ async function argv(app, url, selectionText, tabId, pre) {
     };
   }
 
-  function step() {
+  async function step() {
+    const sPrompt = app.args.indexOf('[PROMPT]') === -1 ? '' : await prompt('User Input');
+    const dPath = app.args.indexOf('[DOWNLOADED_PATH]') === -1 ? '' : await download(url.href).then(d => d.filename);
+
+    const lineBuffer = app.args
+      .replace(/\[HREF\]/g, url.href)
+      .replace(/\[HOSTNAME\]/g, url.hostname)
+      .replace(/\[PATHNAME\]/g, url.pathname)
+      .replace(/\[HASH\]/g, url.hash)
+      .replace(/\[PROTOCOL\]/g, url.protocol)
+      .replace(/\[SELECTIONTEXT\]/g, selectionText)
+      .replace(/\[DOWNLOADED_PATH\]/g, dPath)
+      .replace(/\[FILENAME\]/g, app.filename)
+      .replace(/\[REFERRER\]/g, referrer)
+      .replace(/\[USERAGENT\]/g, userAgent)
+      .replace(/\[COOKIE\]/g, cookie)
+      .replace(/\[PRE_SCRIPT\]/g, pre)
+      .replace(/\[PROMPT\]/g, sPrompt)
+      .replace(/\\/g, '\\\\');
+
+
     const termref = {
-      lineBuffer: app.args.replace(/\[HREF\]/g, url.href)
-        .replace(/\[HOSTNAME\]/g, url.hostname)
-        .replace(/\[PATHNAME\]/g, url.pathname)
-        .replace(/\[HASH\]/g, url.hash)
-        .replace(/\[PROTOCOL\]/g, url.protocol)
-        .replace(/\[SELECTIONTEXT\]/g, selectionText)
-        .replace(/\[DOWNLOADED_PATH\]/g, downloadedPath)
-        .replace(/\[FILENAME\]/g, app.filename)
-        .replace(/\[REFERRER\]/g, referrer)
-        .replace(/\[USERAGENT\]/g, userAgent)
-        .replace(/\[COOKIE\]/g, cookie)
-        .replace(/\[PRE_SCRIPT\]/g, pre)
-        .replace(/\[PROMPT\]/g, () => window.prompt('User Input'))
-        .replace(/\\/g, '\\\\')
+      lineBuffer
     };
     const parser = new Parser();
     // fixes https://github.com/andy-portmen/external-application-button/issues/5
@@ -370,15 +375,7 @@ async function argv(app, url, selectionText, tabId, pre) {
     return termref.argv;
   }
 
-  if (app.args.indexOf('[DOWNLOADED_PATH]') === -1) {
-    return Promise.resolve(step());
-  }
-  else {
-    return download(url.href).then(d => {
-      downloadedPath = d.filename;
-      return step();
-    }).catch(e => notify(e));
-  }
+  return step();
 }
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
