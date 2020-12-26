@@ -210,3 +210,20 @@ label input[type=checkbox] {
 #placement input {
   background-color: #fff;
 }
+
+@media (prefers-color-scheme: dark) {
+  body, li, #placement, td, select {
+    background-color: #313131;
+    color: #bfbfbf;
+  }
+
+  input[type=text], textarea, #placement input,.placeholder li:hover {
+    background-color: #4e4e4e;
+    color: #f3fff0;
+  }
+
+  .note {
+    background-color: #1d671d;
+    color: #f3fff0;
+  }
+}
