@@ -299,9 +299,18 @@ document.getElementById('support').addEventListener('click', () => chrome.tabs.c
 document.getElementById('faqs').addEventListener('change', e => chrome.storage.local.set({
   faqs: e.target.checked
 }));
+
+document.getElementById('exaccess').addEventListener('change', e => chrome.storage.local.set({
+  exaccess: e.target.checked
+}));
+
 chrome.storage.local.get({
-  faqs: true
-}, prefs => document.getElementById('faqs').checked = prefs.faqs);
+  faqs: true,
+  exaccess: false
+}, prefs => {
+  document.getElementById('faqs').checked = prefs.faqs;
+  document.getElementById('exaccess').checked = prefs.exaccess;
+});
 // export
 document.getElementById('export').addEventListener('click', () => {
   chrome.storage.local.get(null, prefs => {

@@ -470,9 +470,9 @@ if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((request, sender, response) => {
     chrome.storage.local.get({
       external_allowed: [],
-      external_denied: []
+      external_denied: [],
+      exaccess: false
     }, prefs => {
-      console.log(prefs);
       if (prefs.external_denied.indexOf(sender.id) !== -1) {
         response(false);
       }
@@ -481,24 +481,31 @@ if (chrome.runtime.onMessageExternal) {
         response(true);
       }
       else {
-        prompt(`An external application with the following ID requested a new connection.
+        if (prefs.exaccess) {
+          prompt(`An external application with the following ID requested a new connection.
 
-Should I allow this application to execute OS level commands?`, sender.id).then(v => {
-          console.log(v, sender.id);
-          if (v === sender.id) {
-            chrome.storage.local.set({
-              external_allowed: [...prefs.external_allowed, sender.id]
-            });
-            execute(request.app, request.tab, request.selectionText, request.frameId || 0);
-            response(true);
-          }
-          else {
-            chrome.storage.local.set({
-              external_denied: [...prefs.external_denied, sender.id]
-            });
-            response(false);
-          }
-        });
+  Should I allow this application to execute OS level commands?`, sender.id).then(v => {
+            console.log(v, sender.id);
+            if (v === sender.id) {
+              chrome.storage.local.set({
+                external_allowed: [...prefs.external_allowed, sender.id]
+              });
+              execute(request.app, request.tab, request.selectionText, request.frameId || 0);
+              response(true);
+            }
+            else {
+              chrome.storage.local.set({
+                external_denied: [...prefs.external_denied, sender.id]
+              });
+              response(false);
+            }
+          });
+        }
+        else {
+          notify(`A request from an extension with ID "${sender.id}" is rejected by the "External Application Button".
+
+To allow external access, visit the options page!`);
+        }
       }
     });
     return true;
@@ -605,10 +612,11 @@ chrome.runtime.onInstalled.addListener(e => {
         if (reason === 'install' || (prefs.faqs && reason === 'update')) {
           const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
           if (doUpdate && previousVersion !== version) {
-            tabs.create({
+            tabs.query({active: true, currentWindow: true}, tbs => tabs.create({
               url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
-              active: reason === 'install'
-            });
+              active: reason === 'install',
+              ...(tbs && tbs.length && {index: tbs[0].index + 1})
+            }));
             storage.local.set({'last-update': Date.now()});
           }
         }
