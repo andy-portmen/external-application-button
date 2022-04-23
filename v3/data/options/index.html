@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Options Page :: External Application Button</title>
+    <link rel="stylesheet" href="index.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+     <div vbox>
+      <table id="app" class="tb">
+        <colgroup>
+          <col>
+          <col>
+          <col>
+        </colgroup>
+        <tr>
+          <td colspan="3"><h3>Application Setup</h3></td>
+        </tr>
+        <tr>
+          <td>Display Name</td>
+          <td colspan="2"><input type="text" data-id="name"></td>
+        </tr>
+        <tr>
+          <td>Executable Name</td>
+          <td><input type="text" placeholder="absolute path of an executable" data-id="path"></td>
+          <td>
+            <div class="placeholder">&nbsp;Examples
+              <ul>
+                <li data-name="Open in Firefox" data-path="%ProgramFiles%\Mozilla Firefox\firefox.exe" data-args="[HREF]"  data-cmd="example">Open in Firefox (Windows)</li>
+                <li data-name="Open in Firefox" data-path="open" data-args="-a firefox [HREF]"  data-cmd="example">Open in Firefox (Mac)</li>
+                <li data-name="Open in Firefox" data-path="firefox" data-args="[HREF]"  data-cmd="example">Open in Firefox (Linux)</li>
+                <li data-name="Open in VLC" data-path="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" data-args="[HREF]"  data-cmd="example">Open in VLC (Windows)</li>
+                <li data-name="Open in VLC" data-path="open" data-args="-a VLC [HREF]"  data-cmd="example">Open in VLC (Mac)</li>
+                <li data-name="Open in VLC" data-path="vlc" data-args="[HREF]"  data-cmd="example">Open in VLC (Linux)</li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td></td>
+          <td colspan="2">
+            <div colspan="2" class="note">If the application is known by the PATH environment variable, there is no need to enter its absolute path.</div>
+          </td>
+        </tr>
+        <tr>
+          <td>Arguments</td>
+          <td>
+            <input type="text" placeholder="command-line arguments to pass to the executable" data-id="arguments">
+          </td>
+          <td>
+            <div class="placeholder">&nbsp;Reserved
+              <ul>
+                <li data-value="[HREF]" data-cmd="insert">Entire URL (page, image, ...)</li>
+                <li data-value="[HOSTNAME]" data-cmd="insert">URL's host-name</li>
+                <li data-value="[PATHNAME]" data-cmd="insert">URL's path-name</li>
+                <li data-value="[HASH]" data-cmd="insert">URL's hash tag</li>
+                <li data-value="[PROTOCOL]" data-cmd="insert">URL's protocol (http, https, ftp)</li>
+                <li data-value="[SELECTIONTEXT]" data-cmd="insert">Selection Text (context menu)</li>
+                <li data-value="[DOWNLOADED_PATH]" data-cmd="insert">Download then insert local path</li>
+                <li data-value="[PROMPT]" data-cmd="insert" chrome>Ask for user input</li>
+                <li data-value="[REFERRER]" data-cmd="insert">Get referrer from the active tab</li>
+                <li data-value="[USERAGENT]" data-cmd="insert">Get User-Agent from the active tab</li>
+                <li data-value="[COOKIE]" data-cmd="insert">Get cookie from the active tab</li>
+                <li data-value="[PRE_SCRIPT]" data-cmd="insert">Get the output of the pre-script</li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><a data-href="faq28" target="_blank">Pre JavaScript</a></td>
+          <td colspan="2">
+            <textarea rows="5" placeholder="Execute a JS code on the current frame element before the external application is called. This can be used to extract some data from the frame. Use the [PRE_SCRIPT] keyword to pass this variable to the external application." data-id="pre"></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td>Post JavaScript</td>
+          <td colspan="2">
+            <textarea rows="5" type="text" placeholder="Execute a JS code on the current frame element after the external application is called. The [POST_SCRIPT_CODE], [POST_SCRIPT_STDOUT], and [POST_SCRIPT_STDERR] keywords will be replaced in your JS code with the equivalents." data-id="post"></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td>Placement</td>
+          <td colspan="2">
+            <div id="placement">
+              <table>
+                <colgroup id="innerc">
+                  <col>
+                  <col>
+                </colgroup>
+                <tr>
+                  <td><label style="padding-bottom: 10px;"><input type="checkbox" data-id="toolbar"> Toolbar button</label></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td><label>Context Menu<sup>1</sup></label></td>
+                  <td data-id="context">
+                    <table>
+                      <colgroup>
+                        <col width="20">
+                        <col>
+                      </colgroup>
+                      <tr>
+                        <td><input type="checkbox" value="page" id="sub-1"></td>
+                        <td><label for="sub-1">Page Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="frame" id="sub-2"></td>
+                        <td><label for="sub-2">Frame Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="selection" id="sub-3"></td>
+                        <td><label for="sub-3">Selection Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="password" id="sub-9"></td>
+                        <td><label for="sub-9">Password Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="link" id="sub-4"></td>
+                        <td><label for="sub-4">Link Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="image" id="sub-5"></td>
+                        <td><label for="sub-5">Image Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="video" id="sub-6"></td>
+                        <td><label for="sub-6">Video Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="audio" id="sub-7"></td>
+                        <td><label for="sub-7">Audio Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="tab" id="sub-8"></td>
+                        <td><label for="sub-8">Tab Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="editable" id="sub-11"></td>
+                        <td><label for="sub-11">Editable Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="folder_pane" id="sub-12"></td>
+                        <td><label for="sub-12">Folder Pane Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="message_list" id="sub-13"></td>
+                        <td><label for="sub-13">Message List Context</label></td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" value="all" id="sub-14"></td>
+                        <td><label for="sub-14">All Contexts</label></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2"><input data-id="pattern" type="text" placeholder="target pattern (*://*/*, ftp://*/*, file://*/*)"></td>
+                      </tr>
+                      <tr><td colspan="2">
+                        <div class="note" style="margin: 5px 0;">Restricts the item appearance based on the src attribute of "img", "audio", and "video" tags and the href attribute of "a" tags. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
+                      </td></tr>
+                      <tr>
+                        <td colspan="2"><input data-id="filters" type="text" placeholder="page pattern (*://*/*, file://*/*)"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2">
+                          <div class="note" style="margin: 5px 0;">Restricts the item appearance to apply only to documents or frames whose URL matches one of the given patterns. To match local and remote pages use "&lt;all_urls&gt;" keyword. By having a wrong pattern in this list, your browser prevents context menu creation.</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td><label style="margin-top: 10px;"><input type="checkbox" data-id="navigation"> Navigation</label></td>
+                  <td><input style="margin-top: 10px;" data-id="redirects" type="text" placeholder="target pattern (*.pdf)"></td>
+                </tr>
+                <tr>
+                  <td colspan="2">
+                    <div class="note" style="margin: 5px 0;">Calls the external application instead of the normal navigation if a filter in this list matches the pattern of the link.</div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><a target="_blank" href="https://www.iconfinder.com/search/?q=browser&minimum=32&maximum=32&price=free">Icon</a> (32x32)</td>
+          <td colspan="2"><input type="file" data-id="icon"></td>
+        </tr>
+        <tr>
+          <td>Ignore Errors</td>
+          <td colspan="2">
+            <label><input type="checkbox" data-id="errors"> Do not alert application errors</label>
+          </td>
+        </tr>
+        <tr>
+          <td>Quotation</td>
+          <td colspan="2">
+            <label><input type="checkbox" data-id="quotes"> Surround arguments with quote characters</label>
+          </td>
+        </tr>
+        <tr>
+          <td>Close Tab</td>
+          <td colspan="2">
+            <label><input type="checkbox" data-id="closeme"> Close the source tab when command is executed</label>
+          </td>
+        </tr>
+        <tr>
+          <td>Window</td>
+          <td colspan="2">
+            <label> Change window state to&nbsp;<select data-id="changestate">
+                <option value="">Do not alter</option>
+                <option value="normal">Normal</option>
+                <option value="minimized">Minimized</option>
+                <option value="maximized">Maximized</option>
+                <option value="fullscreen">Fullscreen</option>
+              </select>
+            </label>
+          </td>
+        </tr>
+      </table>
+      <div id="explore" data-cols="5"></div>
+      <div>
+        <div style="margin-bottom: 10px;">
+          <input type="button" value="Import Settings" id="import">
+          <input type="button" value="Export Settings" id="export">
+        </div>
+        <div class="note" style="margin-bottom: 10px;">Import Settings: This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.</div>
+        <div style="margin-bottom: 10px;">
+          <input type="button" value="Support Development" id="support">
+          <input type="button" value="Open FAQs page" id="ofq">
+          <span id="message" style="float: right;"></span>
+        </div>
+        <div>
+          <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable">
+          <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
+        </div>
+        <div class="note" style="margin-top: 10px;">Test Arguments Validity: Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
+
+Clear Blocked List: This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.</div>
+      </div>
+    </div>
+    <div style="margin: 10px 0;">
+      <input type="button" value="Add Application" data-cmd="add" id="add" style="float: right">
+    </div>
+    <div hbox pack=center class="gap">
+      <span>List of applications:</span>
+      <select flex="1" id="list"></select>
+      <input type="button" value="Remove" disabled="true" id="remove" data-cmd="remove">
+    </div>
+    <div class="note" style="margin-top: 10px">To change the active application in the browser toolbar area, use the right-click context menu over the toolbar button.</div>
+    <table class="tb">
+      <colgroup>
+        <col width=130>
+        <col>
+        <col width="74">
+      </colgroup>
+      <tr>
+        <td colspan="3"><h3>Misc</h3></td>
+      </tr>
+      <tr>
+        <td>FAQs page</td>
+        <td colspan="2">
+          <label><input type="checkbox" id="faqs"> Open FAQs page on updates</label>
+        </td>
+      </tr>
+      <tr>
+        <td>External access</td>
+        <td colspan="2">
+          <label><input type="checkbox" id="exaccess"> Allow other extensions to run native commands (<b>use with caution</b>) (you will get a confirmation box on every new requests)</label>
+        </td>
+      </tr>
+    </table>
+    <hr>
+    <p class="notes">
+      1. This is a comma-separated list of <a href="https://developer.chrome.com/apps/match_patterns">valid wildcard patterns</a> to limit the context menu display only on a particular list of URLs.
+      <br>
+    </p>
+    <iframe id="preview" src="blank.html"></iframe>
+    <script src="index.js"></script>
+    <script async src="matched.js"></script>
+  </body>
+</html>

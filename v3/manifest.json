@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "version": "0.5.0",
+  "name": "External Application Launcher",
+  "description": "Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "nativeMessaging",
+    "downloads",
+    "notifications",
+    "scripting"
+  ],
+  "optional_permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
+  "homepage_url": "https://add0n.com/external-application-button.html",
+  "background": {
+    "service_worker": "worker.js"
+  },
+  "offline_enabled": true,
+  "options_ui": {
+    "page": "data/options/index.html",
+    "open_in_tab": true
+  },
+  "action": {},
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "48": "data/icons/48.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  },
+  "web_accessible_resources": [{
+    "resources": ["data/redirect/index.html"],
+    "matches": ["*://*/*"]
+  }],
+  "commands": {
+    "_execute_action": {}
+  }
+}
