@@ -411,13 +411,21 @@ function execute(app, tab, selectionText, frameId) {
         tabId: tab.id,
         frameIds: [frameId]
       },
+      // use "document.currentScript.output" to assign this value. Does not work on FF so we use custom events
       func: code => {
+        let output;
         const s = document.createElement('script');
-        s.textContent = code;
+        s.addEventListener('output', e => {
+          e.stopPropagation();
+          output = e.detail;
+        });
+        s.textContent = code + `; document.currentScript.dispatchEvent(new CustomEvent('output', {
+          detail: document.currentScript.output
+        }))`;
         document.body.append(s);
         s.remove();
-        // use "document.currentScript.output" to assign this value
-        return s.output || '';
+
+        return s.output || output || '';
       },
       args: [app.pre]
     }).then(arr => {
