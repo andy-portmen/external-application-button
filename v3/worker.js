@@ -132,7 +132,6 @@ function update() {
   }, prefs => {
     if (prefs.active) {
       const app = prefs.apps[prefs.active];
-      console.log(app);
       chrome.action.setIcon({
         path: app.icon
       });
@@ -465,7 +464,6 @@ if (chrome.runtime.onMessageExternal) {
           prompt(`An external application with the following ID requested a new connection.
 
   Should I allow this application to execute OS level commands?`, sender.id).then(v => {
-            console.log(v, sender.id);
             if (v === sender.id) {
               chrome.storage.local.set({
                 external_allowed: [...prefs.external_allowed, sender.id]
@@ -580,7 +578,7 @@ chrome.runtime.onInstalled.addListener(e => {
   if (e.reason === 'install') {
     const os = navigator.platform.substr(0, 3).toLocaleLowerCase();
     fetch('configs/' + os + '.json').then(r => r.json()).then(prefs => {
-      console.log('configuring extension for the first run');
+      console.info('*** Configuring the extension for the first run ***');
       chrome.storage.local.set(prefs);
     }).catch(() => {});
   }
