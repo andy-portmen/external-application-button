@@ -553,13 +553,21 @@ chrome.storage.onChanged.addListener(prefs => {
   }
 });
 
-chrome.action.onClicked.addListener(tab => {
+chrome.action.onClicked.addListener(() => {
   chrome.storage.local.get({
     active: null,
     apps: {}
   }, prefs => {
     if (prefs.active) {
-      execute(prefs.apps[prefs.active], tab, '', 0);
+      // run on all highlighted tabs
+      chrome.tabs.query({
+        currentWindow: true,
+        highlighted: true
+      }, tabs => {
+        for (const tab of tabs) {
+          execute(prefs.apps[prefs.active], tab, '', 0);
+        }
+      });
     }
     else {
       chrome.runtime.openOptionsPage();
