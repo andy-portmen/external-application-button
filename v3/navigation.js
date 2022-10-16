@@ -16,12 +16,8 @@ const navigate = () => {
 
       let id = 1;
       for (const [key, o] of Object.entries(prefs.apps)) {
-        console.log(key, o);
-
         if (o.redirects) {
           for (const regexFilter of o.redirects.split(/\s*,\s*/).map(wildcardToRegExp)) {
-            console.log(regexFilter);
-
             addRules.push({
               id,
               action: {

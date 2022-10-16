@@ -132,6 +132,7 @@ function update() {
   }, prefs => {
     if (prefs.active) {
       const app = prefs.apps[prefs.active];
+      console.log(app);
       chrome.action.setIcon({
         path: app.icon
       });
@@ -227,14 +228,14 @@ ${e.message}`);
         chrome.contextMenus.create({
           id: 'change-to-' + id,
           title: prefs.apps[id].name,
-          contexts: ['browser_action'],
+          contexts: ['action'],
           parentId: (index > 4 && bi.length > 6) ? 'extra' : undefined
         });
         if (index === 4 && bi.length > 6) {
           chrome.contextMenus.create({
             title: 'Extra Applications',
             id: 'extra',
-            contexts: ['browser_action']
+            contexts: ['action']
           });
         }
       });

@@ -272,11 +272,9 @@ list.addEventListener('change', () => {
       app.dataset.file = prefs.apps[list.value].icon;
       form.icon.value = '';
       app.dataset.id = list.value;
-      if (prefs.apps[list.value].toolbar) {
-        chrome.storage.local.set({
-          active: list.value
-        });
-      }
+      chrome.storage.local.set({
+        active: prefs.apps[list.value].toolbar ? list.value : ''
+      });
     });
   }
   else {
