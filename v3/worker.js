@@ -315,7 +315,23 @@ async function argv(app, url, selectionText, tabId, pre) {
     const parser = new Parser();
     // fixes https://github.com/andy-portmen/external-application-button/issues/5
     parser.escapeExpressions = {};
+    parser.optionChars = {};
     parser.parseLine(termref);
+
+    // merge args (example: --http-header-fields="Referer: undefined")
+    // https://github.com/andy-portmen/external-application-button/issues/83
+    const fix = [];
+    termref.argv.forEach((arg, n) => {
+      if (arg.endsWith('=') && termref.argQL[n + 1]) {
+        fix.push(n);
+      }
+    });
+    fix.reverse();
+    for (const n of fix) {
+      const args = [termref.argv[n], termref.argQL[n + 1], termref.argv[n + 1], termref.argQL[n + 1]];
+      termref.argv.splice(n, 2, args.join(''));
+      termref.argQL.splice(n + 1, 1);
+    }
 
     if (app.quotes) {
       termref.argv = termref.argv.map((a, i) => {
@@ -325,6 +341,7 @@ async function argv(app, url, selectionText, tabId, pre) {
         return a;
       });
     }
+
     return termref.argv;
   }
 
