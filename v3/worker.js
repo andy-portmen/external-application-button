@@ -442,7 +442,11 @@ function execute(app, tab, selectionText, frameId) {
         document.body.append(s);
         s.remove();
 
-        return s.output || output || '';
+        const r = s.output || output || '';
+        if (document.currentScript) {
+          document.currentScript.dataset.result = r; // Firefox
+        }
+        return r;
       },
       args: [app.pre]
     }).then(arr => {
