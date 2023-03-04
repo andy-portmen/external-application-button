@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.5.2",
+  "version": "0.5.3",
   "name": "External Application Launcher",
   "description": "Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
   "permissions": [
@@ -18,7 +18,7 @@
   "optional_host_permissions": [
     "*://*/*"
   ],
-  "homepage_url": "https://webextension.org/listing/external-application-button.html?d",
+  "homepage_url": "https://webextension.org/listing/external-application-button.html",
   "background": {
     "service_worker": "worker.js"
   },

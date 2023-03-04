@@ -292,6 +292,18 @@ async function argv(app, url, selectionText, tabId, pre) {
     const sPrompt = app.args.indexOf('[PROMPT]') === -1 ? '' : await prompt('User Input');
     const dPath = app.args.indexOf('[DOWNLOADED_PATH]') === -1 ? '' : await download(url.href).then(d => d.filename);
 
+    let preArray = [];
+    // is "pre" an array
+    try {
+      const r = JSON.parse(pre);
+      if (Array.isArray(r)) {
+        preArray = r;
+      }
+      // escaping double quotes
+      pre = pre.replace(/"/g, '\\x22');
+    }
+    catch (e) {}
+
     const lineBuffer = app.args
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
@@ -304,10 +316,10 @@ async function argv(app, url, selectionText, tabId, pre) {
       .replace(/\[REFERRER\]/g, referrer)
       .replace(/\[USERAGENT\]/g, userAgent)
       .replace(/\[COOKIE\]/g, cookie)
+      .replace(/\[PRE_SCRIPT:\s*(\d+)\]/g, (str, n) => preArray[n] || '')
       .replace(/\[PRE_SCRIPT\]/g, pre)
       .replace(/\[PROMPT\]/g, sPrompt)
       .replace(/\\/g, '\\\\');
-
 
     const termref = {
       lineBuffer
@@ -442,7 +454,16 @@ function execute(app, tab, selectionText, frameId) {
         document.body.append(s);
         s.remove();
 
-        const r = s.output || output || '';
+        let r = s.output || output || '';
+        if (typeof r !== 'string') {
+          try {
+            r = JSON.stringify(r);
+          }
+          catch (e) {
+            r = 'Error: ' + e.message;
+          }
+        }
+
         if (document.currentScript) {
           document.currentScript.dataset.result = r; // Firefox
         }
