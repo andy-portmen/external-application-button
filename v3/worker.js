@@ -264,10 +264,12 @@ ${e.message}`);
   });
 }
 
-async function argv(app, url, selectionText, tabId, pre) {
+async function argv(app, url, selectionText, tab, pre) {
   let userAgent = app.userAgent || '';
   let referrer = app.referrer || '';
   let cookie = app.cookie || '';
+
+  const tabId = tab.id;
 
   if (tabId && app.args.indexOf('[USERAGENT]') !== -1 && !userAgent) {
     await chrome.scripting.executeScript({
@@ -311,7 +313,7 @@ async function argv(app, url, selectionText, tabId, pre) {
 
   async function step() {
     const sPrompt = app.args.includes('[PROMPT]') ? await prompt('User Input') : '';
-    const dPath = app.args.indexOf('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '';
+    const dPath = app.args.includes('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '';
 
     let preArray = [];
     // is "pre" an array
@@ -326,6 +328,7 @@ async function argv(app, url, selectionText, tabId, pre) {
     catch (e) {}
 
     const lineBuffer = app.args
+      .replace(/\[TITLE\]/g, tab.title)
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
       .replace(/\[PATHNAME\]/g, url.pathname)
@@ -383,7 +386,7 @@ async function argv(app, url, selectionText, tabId, pre) {
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    argv(request.app, 'http://example.com/index.html', 'Sample selected text', 0, 'PRE_SCIPT_OUTPUT')
+    argv(request.app, 'http://example.com/index.html', 'Sample selected text', sender.tab, 'PRE_SCIPT_OUTPUT')
       .then(response)
       .catch(e => notify(e));
     return true;
@@ -416,7 +419,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 });
 
 function execute(app, tab, selectionText, frameId) {
-  const next = pre => argv(app, tab.url, selectionText, tab.id, pre).then(args => {
+  const next = pre => argv(app, tab.url, selectionText, tab, pre).then(args => {
     chrome.runtime.sendNativeMessage(application, {
       cmd: 'env'
     }, res => {
