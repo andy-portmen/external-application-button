@@ -15,26 +15,47 @@ const notify = e => chrome.notifications.create({
 });
 
 const prompt = (message, value = '') => new Promise((resolve, reject) => {
-  chrome.storage.session.get({
-    'prompt-cache': {}
-  }, prefs => {
+  chrome.windows.getCurrent(win => {
+    const width = 600;
+    const height = 200;
+    const left = win.left + Math.round((win.width - width) / 2);
+    const top = win.top + Math.round((win.height - height) / 2);
+
     chrome.windows.create({
-      url: 'data/prompt/index.html?message=' + encodeURIComponent(message) + '&value=' + encodeURIComponent(value),
+      url: '/data/prompt/index.html?message=' + encodeURIComponent(message) + '&value=' + encodeURIComponent(value),
       type: 'popup',
-      width: 600,
-      height: 200,
-      left: screen.availLeft + Math.round((screen.availWidth - 600) / 2),
-      top: screen.availTop + Math.round((screen.availHeight - 180) / 2)
-    }, w => {
-      prefs['prompt-cache'][w.id] = {resolve, reject};
-      chrome.storage.session.set(prefs);
-    });
+      width,
+      height,
+      left,
+      top
+    }, w => prompt.cache[w.id] = {resolve, reject});
   });
+});
+prompt.cache = {};
+chrome.runtime.onConnect.addListener(port => {
+  if (port.name === 'prompt') {
+    port.onDisconnect.addListener(() => {
+      const o = prompt.cache[port.sender.tab.windowId];
+      if (o) {
+        o.resolve();
+      }
+    });
+    port.onMessage.addListener(value => {
+      const o = prompt.cache[port.sender.tab.windowId];
+      if (o) {
+        delete prompt.cache[port.sender.tab.windowId];
+        o.resolve(value);
+      }
+      else {
+        console.error('no prompt resolver is found for this window');
+      }
+    });
+  }
 });
 
 function error(response) {
   chrome.tabs.query({
-    currentWindow: true,
+    lastFocusedWindow: true,
     active: true
   }, ([tab]) => {
     chrome.action.setBadgeText({
@@ -142,9 +163,9 @@ function update() {
     else {
       chrome.action.setIcon({
         path: {
-          '16': 'data/icons/16.png',
-          '32': 'data/icons/32.png',
-          '64': 'data/icons/64.png'
+          '16': '/data/icons/16.png',
+          '32': '/data/icons/32.png',
+          '64': '/data/icons/64.png'
         }
       });
       chrome.action.setTitle({
@@ -289,8 +310,8 @@ async function argv(app, url, selectionText, tabId, pre) {
   }
 
   async function step() {
-    const sPrompt = app.args.indexOf('[PROMPT]') === -1 ? '' : await prompt('User Input');
-    const dPath = app.args.indexOf('[DOWNLOADED_PATH]') === -1 ? '' : await download(url.href).then(d => d.filename);
+    const sPrompt = app.args.includes('[PROMPT]') ? await prompt('User Input') : '';
+    const dPath = app.args.indexOf('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '';
 
     let preArray = [];
     // is "pre" an array
@@ -362,7 +383,9 @@ async function argv(app, url, selectionText, tabId, pre) {
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    argv(request.app, 'http://example.com/index.html', 'Sample selected text', 0, 'PRE_SCIPT_OUTPUT').then(response).catch(e => notify(e));
+    argv(request.app, 'http://example.com/index.html', 'Sample selected text', 0, 'PRE_SCIPT_OUTPUT')
+      .then(response)
+      .catch(e => notify(e));
     return true;
   }
   else if (request.method === 'notify') {
@@ -382,21 +405,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
       else {
         console.warn('app with requested id cannot be found', request.id);
-      }
-    });
-  }
-  else if (request.method === 'prompt-resolved') {
-    chrome.storage.session.get({
-      'prompt-cache': {}
-    }, prefs => {
-      const o = prefs['prompt-cache'][sender.tab.windowId];
-      if (o) {
-        const {resolve} = o;
-        delete prefs['prompt-cache'][sender.tab.windowId];
-        chrome.storage.session.set(prefs, () => resolve(request.value));
-      }
-      else {
-        console.error('no prompt resolver is found for this tab');
       }
     });
   }
@@ -601,7 +609,7 @@ chrome.action.onClicked.addListener(() => {
     if (prefs.active) {
       // run on all highlighted tabs
       chrome.tabs.query({
-        currentWindow: true,
+        lastFocusedWindow: true,
         highlighted: true
       }, tabs => {
         for (const tab of tabs) {
@@ -640,7 +648,7 @@ chrome.runtime.onInstalled.addListener(e => {
         if (reason === 'install' || (prefs.faqs && reason === 'update')) {
           const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
           if (doUpdate && previousVersion !== version) {
-            tabs.query({active: true, currentWindow: true}, tbs => tabs.create({
+            tabs.query({active: true, lastFocusedWindow: true}, tbs => tabs.create({
               url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
               active: reason === 'install',
               ...(tbs && tbs.length && {index: tbs[0].index + 1})

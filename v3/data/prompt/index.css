@@ -1,0 +1,36 @@
+html {
+  height: 100%;
+  background-color: #fff;
+  color: #4d5156;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 13px;
+  margin: 10px;
+  height: calc(100% - 20px);
+}
+input {
+  background-color: #f3f3f3;
+  border: none;
+  border-radius: 0;
+  padding: 10px;
+  margin-top: 10px;
+  outline: none;
+}
+input[type=submit],
+input[type=button] {
+  cursor: pointer;
+  width: 100px;
+}
+input[type=submit]:disabled,
+input[type=button]:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+#input {
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+}

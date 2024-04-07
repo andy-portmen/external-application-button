@@ -3,18 +3,14 @@
 const args = new URLSearchParams(location.search);
 document.getElementById('message').textContent = args.get('message');
 
+const port = chrome.runtime.connect({name: 'prompt'});
+
 document.getElementById('cancel').addEventListener('click', () => {
-  chrome.runtime.sendMessage({
-    method: 'prompt-resolved'
-  });
   window.close();
 });
 document.querySelector('form').addEventListener('submit', e => {
   e.preventDefault();
-  chrome.runtime.sendMessage({
-    method: 'prompt-resolved',
-    value: document.getElementById('input').value
-  });
+  port.postMessage(document.getElementById('input').value);
   window.close();
 });
 
@@ -25,9 +21,6 @@ document.getElementById('input').addEventListener('input', e => {
 window.addEventListener('blur', () => chrome.runtime.sendMessage({
   method: 'bring-to-front'
 }));
-window.onbeforeunload = () => chrome.runtime.sendMessage({
-  method: 'prompt-resolved'
-});
 
 document.addEventListener('keyup', e => {
   if (e.code === 'Escape') {
