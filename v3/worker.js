@@ -589,9 +589,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         }
       }
       execute(app, {
-        url,
-        id: tab.id,
-        windowId: tab.windowId
+        ...tab,
+        url
       }, selectionText, info.frameId);
     });
   }
