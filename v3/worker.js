@@ -420,29 +420,40 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
 function execute(app, tab, selectionText, frameId) {
   const next = pre => argv(app, tab.url, selectionText, tab, pre).then(args => {
-    chrome.runtime.sendNativeMessage(application, {
-      cmd: 'env'
-    }, res => {
-      const env = ((res || {}).env || {});
-      chrome.runtime.sendNativeMessage(application, {
-        cmd: 'exec',
-        command: app.path.replace(/%([^%]+)%/g, (a, b) => env[b] || b),
-        arguments: args,
-        properties: app.quotes ? {windowsVerbatimArguments: true} : {}
-      }, r => {
-        if (app.closeme && tab.id) {
-          chrome.tabs.remove(tab.id);
-        }
-        if (app.changestate && tab.windowId) {
-          chrome.windows.update(tab.windowId, {
-            state: app.changestate
-          });
-        }
-        if (!app.errors) {
-          response(r, tab.id, frameId, app.post);
-        }
+    const result = r => {
+      if (app.closeme && tab.id) {
+        chrome.tabs.remove(tab.id);
+      }
+      if (app.changestate && tab.windowId) {
+        chrome.windows.update(tab.windowId, {
+          state: app.changestate
+        });
+      }
+      if (!app.errors) {
+        response(r, tab.id, frameId, app.post);
+      }
+    };
+
+    if (app.path === '[SKIP]') {
+      result({
+        code: 0,
+        stdout: 'Native execution is skipped',
+        stderr: ''
       });
-    });
+    }
+    else {
+      chrome.runtime.sendNativeMessage(application, {
+        cmd: 'env'
+      }, res => {
+        const env = ((res || {}).env || {});
+        chrome.runtime.sendNativeMessage(application, {
+          cmd: 'exec',
+          command: app.path.replace(/%([^%]+)%/g, (a, b) => env[b] || b),
+          arguments: args,
+          properties: app.quotes ? {windowsVerbatimArguments: true} : {}
+        }, r => result(r));
+      });
+    }
   }).catch(e => notify(e));
   if (app.pre) {
     chrome.scripting.executeScript({

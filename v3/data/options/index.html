@@ -23,7 +23,7 @@
         </tr>
         <tr>
           <td>Executable Name</td>
-          <td><input type="text" placeholder="absolute path of an executable" data-id="path"></td>
+          <td><input type="text" placeholder="Absolute path of the executable. To skip, fill the box with '[SKIP]' keyword." data-id="path"></td>
           <td>
             <div class="placeholder">&nbsp;Examples
               <ul>
@@ -79,7 +79,7 @@
         <tr>
           <td>Post JavaScript</td>
           <td colspan="2">
-            <textarea rows="5" type="text" placeholder="Execute a JS code on the current frame element after the external application is called. The [POST_SCRIPT_CODE], [POST_SCRIPT_STDOUT], and [POST_SCRIPT_STDERR] keywords will be replaced in your JS code with the equivalents." data-id="post"></textarea>
+            <textarea rows="5" type="text" placeholder="Execute a JS code on the current frame element after the external application is called. The [POST_SCRIPT_CODE] (return code by native app), [POST_SCRIPT_STDOUT] (stdout of the native app), and [POST_SCRIPT_STDERR] (stderror of the native app) keywords will be replaced in your JS code with the equivalents." data-id="post"></textarea>
           </td>
         </tr>
         <tr>
