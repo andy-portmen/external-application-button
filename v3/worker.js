@@ -7,12 +7,19 @@ const application = 'com.add0n.node';
 
 const log = (...args) => false && console.log(...args);
 
-const notify = e => chrome.notifications.create({
-  type: 'basic',
-  iconUrl: '/data/icons/48.png',
-  title: chrome.runtime.getManifest().name,
-  message: e.message || e
-});
+const notify = e => {
+  const message = e.message || e;
+  if (message === 'USER_ABORT') {
+    return;
+  }
+
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: '/data/icons/48.png',
+    title: chrome.runtime.getManifest().name,
+    message
+  });
+};
 
 const prompt = (message, value = '') => new Promise((resolve, reject) => {
   chrome.windows.getCurrent(win => {
@@ -312,7 +319,20 @@ async function argv(app, url, selectionText, tab, pre) {
   }
 
   async function step() {
-    const sPrompt = app.args.includes('[PROMPT]') ? await prompt('User Input') : '';
+    const pp = () => { // [PROMPT|message|value]
+      const parts = app.args.split('[PROMPT')[1].split(']')[0];
+      const r = parts.split('|');
+
+      return prompt(r[1] || 'User Input', r[2] || '').then(a => {
+        if (!a) {
+          throw Error('USER_ABORT');
+        }
+        return a;
+      });
+    };
+
+    const sPrompt = app.args.includes('[PROMPT') ? await pp() : '';
+
     const dPath = app.args.includes('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '';
 
     let preArray = [];
@@ -342,7 +362,7 @@ async function argv(app, url, selectionText, tab, pre) {
       .replace(/\[COOKIE\]/g, cookie)
       .replace(/\[PRE_SCRIPT:\s*(\d+)\]/g, (str, n) => preArray[n] || '')
       .replace(/\[PRE_SCRIPT\]/g, pre)
-      .replace(/\[PROMPT\]/g, sPrompt)
+      .replace(/\[PROMPT[^]*\]/g, sPrompt)
       .replace(/\\/g, '\\\\');
 
     const termref = {
