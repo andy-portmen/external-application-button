@@ -13,7 +13,8 @@
     "scripting"
   ],
   "optional_permissions": [
-    "declarativeNetRequestWithHostAccess"
+    "declarativeNetRequestWithHostAccess",
+    "tabs"
   ],
   "optional_host_permissions": [
     "*://*/*"
@@ -42,6 +43,33 @@
     "matches": ["*://*/*"]
   }],
   "commands": {
-    "_execute_action": {}
+    "_execute_action": {},
+    "shortcut-1": {
+      "description": "Custom Shortcut (1)"
+    },
+    "shortcut-2": {
+      "description": "Custom Shortcut (2)"
+    },
+    "shortcut-3": {
+      "description": "Custom Shortcut (3)"
+    },
+    "shortcut-4": {
+      "description": "Custom Shortcut (4)"
+    },
+    "shortcut-5": {
+      "description": "Custom Shortcut (5)"
+    },
+    "shortcut-6": {
+      "description": "Custom Shortcut (6)"
+    },
+    "shortcut-7": {
+      "description": "Custom Shortcut (7)"
+    },
+    "shortcut-8": {
+      "description": "Custom Shortcut (8)"
+    },
+    "shortcut-9": {
+      "description": "Custom Shortcut (9)"
+    }
   }
 }

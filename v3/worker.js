@@ -2,6 +2,7 @@
 
 self.importScripts('termlib_parser.js');
 self.importScripts('navigation.js');
+self.importScripts('triggers/core.js');
 
 const application = 'com.add0n.node';
 
@@ -271,7 +272,7 @@ ${e.message}`);
   });
 }
 
-async function argv(app, url, selectionText, tab, pre) {
+async function argv(app, url, selectionText, tab, pre, extra = '') {
   let userAgent = app.userAgent || '';
   let referrer = app.referrer || '';
   let cookie = app.cookie || '';
@@ -348,6 +349,7 @@ async function argv(app, url, selectionText, tab, pre) {
     catch (e) {}
 
     const lineBuffer = app.args
+      .replace(/\[EXTRA\]/g, btoa(extra || ''))
       .replace(/\[TITLE\]/g, tab.title)
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
@@ -406,7 +408,7 @@ async function argv(app, url, selectionText, tab, pre) {
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.method === 'parse') {
-    argv(request.app, 'http://example.com/index.html', 'Sample selected text', sender.tab, 'PRE_SCIPT_OUTPUT')
+    argv(request.app, 'http://example.com/index.html', 'Sample selected text', sender.tab, 'PRE_SCIPT_OUTPUT', '{}')
       .then(response)
       .catch(e => notify(e));
     return true;
@@ -424,7 +426,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           url: request.href,
           id: sender.tab.id,
           windowId: sender.tab.windowId
-        }, request.selectionText, sender.frameId);
+        }, request.selectionText, sender.frameId, request.extra);
       }
       else {
         console.warn('app with requested id cannot be found', request.id);
@@ -438,8 +440,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
 });
 
-function execute(app, tab, selectionText, frameId) {
-  const next = pre => argv(app, tab.url, selectionText, tab, pre).then(args => {
+function execute(app, tab, selectionText, frameId, extra = '') {
+  const next = pre => argv(app, tab.url, selectionText, tab, pre, extra).then(args => {
     const result = r => {
       if (app.closeme && tab.id) {
         chrome.tabs.remove(tab.id);
@@ -493,7 +495,7 @@ function execute(app, tab, selectionText, frameId) {
         s.textContent = code + `; document.currentScript.dispatchEvent(new CustomEvent('output', {
           detail: document.currentScript.output
         }))`;
-        document.body.append(s);
+        (document.body || document.documentElement).append(s);
         s.remove();
 
         let r = s.output || output || '';
@@ -540,7 +542,7 @@ if (chrome.runtime.onMessageExternal) {
         response(false);
       }
       else if (prefs.external_allowed.indexOf(sender.id) !== -1) {
-        execute(request.app, request.tab, request.selectionText, request.frameId || 0);
+        execute(request.app, request.tab, request.selectionText, request.frameId || 0, request.extra);
         response(true);
       }
       else {
@@ -552,7 +554,7 @@ if (chrome.runtime.onMessageExternal) {
               chrome.storage.local.set({
                 external_allowed: [...prefs.external_allowed, sender.id]
               });
-              execute(request.app, request.tab, request.selectionText, request.frameId || 0);
+              execute(request.app, request.tab, request.selectionText, request.frameId || 0, request.extra);
               response(true);
             }
             else {
@@ -611,7 +613,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       execute(app, {
         ...tab,
         url
-      }, selectionText, info.frameId);
+      }, selectionText, info.frameId, JSON.stringify(info));
     });
   }
 });
@@ -646,7 +648,7 @@ chrome.action.onClicked.addListener(() => {
         highlighted: true
       }, tabs => {
         for (const tab of tabs) {
-          execute(prefs.apps[prefs.active], tab, '', 0);
+          execute(prefs.apps[prefs.active], tab, '', 0, JSON.stringify(tab));
         }
       });
     }

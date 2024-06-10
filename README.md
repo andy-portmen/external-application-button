@@ -7,7 +7,7 @@ Communicate with external applications of your OS through a toolbar button or co
 [![Preview](https://img.youtube.com/vi/sTOHWbX7dKU/0.jpg)](https://www.youtube.com/watch?v=sTOHWbX7dKU)
 
 ### Links
-  * Homepage: https://add0n.com/external-application-button.html
+  * Homepage: https://webextension.org/listing/external-application-button.html
   * Chrome Store: https://chrome.google.com/webstore/detail/external-application-butt/bifmfjgpgndemajpeeoiopbeilbaifdo
   * Firefox add-ons: https://addons.mozilla.org/en-US/firefox/addon/external-application/
   * Opera addons: https://addons.opera.com/en/extensions/details/external-application-button/

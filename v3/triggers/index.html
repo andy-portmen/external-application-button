@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Triggers :: External Application Launcher</title>
+  <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+  <template id="trigger">
+    <div class="trigger">
+      <input type="checkbox">
+      <select class="name"></select>
+      <select class="action">
+        <option value="shortcut-1">Custom Shortcut (1)</option>
+        <option value="shortcut-2">Custom Shortcut (2)</option>
+        <option value="shortcut-3">Custom Shortcut (3)</option>
+        <option value="shortcut-4">Custom Shortcut (4)</option>
+        <option value="shortcut-5">Custom Shortcut (5)</option>
+        <option value="shortcut-6">Custom Shortcut (6)</option>
+        <option value="shortcut-7">Custom Shortcut (7)</option>
+        <option value="shortcut-8">Custom Shortcut (8)</option>
+        <option value="shortcut-9">Custom Shortcut (9)</option>
+        <hr>
+        <option value="download-started">Download is Started</option>
+        <option value="download-ended">Download is Finished</option>
+        <hr>
+        <option value="js">Run JavaScript</option>
+      </select>
+      <textarea rows="5" disabled placeholder="This script runs on every page. When 'document.currentScript.output' returns a value, the external application is executed and the returned value is provided in [EXTRA] argument."></textarea>
+    </div>
+  </template>
+  <div id="triggers"></div>
+  <div id="toolbar">
+    <span id="toast"></span>
+    <input type="button" id="shortcuts" value="Open Shortcuts">
+    <input type="button" id="remove" value="Remove Selected Triggers" disabled>
+    <input type="button" id="add" value="Add new Trigger" disabled>
+    <input type="button" id="save" value="Save Triggers">
+  </div>
+  <script type="text/javascript" src="index.js"></script>
+</body>
+</html>

@@ -357,6 +357,10 @@ document.getElementById('ofq').addEventListener('click', () => chrome.tabs.creat
   url: chrome.runtime.getManifest().homepage_url
 }));
 
+document.getElementById('triggers').addEventListener('click', () => chrome.tabs.create({
+  url: '/triggers/index.html'
+}));
+
 // navigation
 form.navigation.addEventListener('change', e => {
   if (e.target.checked) {
@@ -382,9 +386,28 @@ form.redirects.addEventListener('input', () => {
 });
 
 // links
-// links
 for (const a of [...document.querySelectorAll('[data-href]')]) {
   if (a.hasAttribute('href') === false) {
     a.href = chrome.runtime.getManifest().homepage_url + '#' + a.dataset.href;
   }
 }
+
+// tabs permission
+document.getElementById('tabs').onclick = e => chrome.permissions.request({
+  permissions: ['tabs'],
+  origins: ['*://*/*']
+}, granted => {
+  if (granted) {
+    e.target.remove();
+  }
+});
+
+chrome.permissions.contains({
+  permissions: ['tabs'],
+  origins: ['*://*/*']
+}, granted => {
+  if (granted) {
+    document.getElementById('tabs').remove();
+  }
+});
+
