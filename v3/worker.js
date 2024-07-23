@@ -348,8 +348,20 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
     }
     catch (e) {}
 
+    // https://github.com/andy-portmen/external-application-button/issues/108
+    let extrap = '';
+    if (/\[EXTRA\]/.test(app.args)) {
+      const encoder = new TextEncoder();
+      const encodedData = encoder.encode(extra || '');
+      let binaryString = '';
+      for (let i = 0; i < encodedData.length; i++) {
+        binaryString += String.fromCharCode(encodedData[i]);
+      }
+      extrap = btoa(binaryString);
+    }
+
     const lineBuffer = app.args
-      .replace(/\[EXTRA\]/g, btoa(extra || ''))
+      .replace(/\[EXTRA\]/g, extrap)
       .replace(/\[TITLE\]/g, tab.title)
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
