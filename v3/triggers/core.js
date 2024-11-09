@@ -133,9 +133,6 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           }
         }
 
-        if (document.currentScript) {
-          document.currentScript.dataset.result = r; // Firefox
-        }
         return r;
       },
       args: [request.js]

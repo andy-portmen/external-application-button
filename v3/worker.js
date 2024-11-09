@@ -1,8 +1,10 @@
 /* global Parser */
 
-self.importScripts('termlib_parser.js');
-self.importScripts('navigation.js');
-self.importScripts('triggers/core.js');
+if (typeof importScripts !== 'undefined') {
+  self.importScripts('termlib_parser.js');
+  self.importScripts('navigation.js');
+  self.importScripts('triggers/core.js');
+}
 
 const application = 'com.add0n.node';
 
@@ -19,7 +21,7 @@ const notify = e => {
     iconUrl: '/data/icons/48.png',
     title: chrome.runtime.getManifest().name,
     message
-  });
+  }, id => setTimeout(chrome.notifications.clear, 5000, id));
 };
 
 const prompt = (message, value = '') => new Promise((resolve, reject) => {
@@ -177,7 +179,7 @@ function update() {
         }
       });
       chrome.action.setTitle({
-        title: 'External Application Button'
+        title: chrome.runtime.getManifest().name
       });
     }
     chrome.contextMenus.removeAll(() => {
@@ -520,9 +522,6 @@ function execute(app, tab, selectionText, frameId, extra = '') {
           }
         }
 
-        if (document.currentScript) {
-          document.currentScript.dataset.result = r; // Firefox
-        }
         return r;
       },
       args: [app.pre]
@@ -578,7 +577,8 @@ if (chrome.runtime.onMessageExternal) {
           });
         }
         else {
-          notify(`A request from an extension with ID "${sender.id}" is rejected by the "External Application Button".
+          const me = chrome.runtime.getManifest().name;
+          notify(`A request from an extension with ID "${sender.id}" is rejected by the "${me}".
 
 To allow external access, visit the options page!`);
         }
@@ -685,8 +685,7 @@ chrome.runtime.onInstalled.addListener(e => {
 {
   const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
   if (navigator.webdriver !== true) {
-    const page = getManifest().homepage_url;
-    const {name, version} = getManifest();
+    const {homepage_url: page, name, version} = getManifest();
     onInstalled.addListener(({reason, previousVersion}) => {
       management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
         'faqs': true,

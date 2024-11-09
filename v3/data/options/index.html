@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Options Page :: External Application Button</title>
+  <title>Options Page :: External Application Launcher</title>
+  <link rel="icon" type="image/png" href="/data/icons/64.png">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -222,7 +223,6 @@
         </td>
       </tr>
     </table>
-    <div id="explore" data-cols="5"></div>
     <div>
       <div style="margin-bottom: 10px;">
         <input type="button" value="Import Settings" id="import">
@@ -237,7 +237,7 @@
       </div>
       <div>
         <input type="button" value="Test Arguments Validity" data-cmd="test" id="test" title="See the actual list of arguments that is sent to the external executable">
-        <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using External Application Button">
+        <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using this extension">
         <input type="button" value="Manage Triggers" data-cmd="triggers" id="triggers" title="Manage triggers to open external applications">
       </div>
       <div class="note" style="margin-top: 10px;">Test Arguments Validity: Each row must display a single argument. Use '"' character (if an argument has one or more special characters like spaces) to adjust the argument list such that each row displays just a "single" argument.
@@ -283,6 +283,5 @@ Clear Blocked List: This extension allows other extensions/applications to run n
   </p>
   <iframe id="preview" src="blank.html"></iframe>
   <script src="index.js"></script>
-  <script async src="matched.js"></script>
 </body>
 </html>

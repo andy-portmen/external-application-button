@@ -27,11 +27,13 @@ const form = {
 };
 
 // hide unsupported items
-[...document.querySelectorAll('[data-id=context] input[type=checkbox]')].forEach(e => {
-  if (chrome.contextMenus.ContextType[e.value.toUpperCase()] === undefined) {
-    e.closest('tr').classList.add('hidden');
-  }
-});
+if (typeof chrome.contextMenus.ContextType !== 'undefined') {
+  [...document.querySelectorAll('[data-id=context] input[type=checkbox]')].forEach(e => {
+    if (chrome.contextMenus.ContextType[e.value.toUpperCase()] === undefined) {
+      e.closest('tr').classList.add('hidden');
+    }
+  });
+}
 
 let id;
 
@@ -221,7 +223,7 @@ document.addEventListener('click', e => {
     chrome.storage.local.set({
       external_denied: [],
       external_allowed: []
-    }, chrome.runtime.sendMessage({
+    }, () => chrome.runtime.sendMessage({
       method: 'notify',
       message: 'Both allowed and denied lists are cleared. New external commands will prompt for user approval!'
     }));
@@ -365,7 +367,6 @@ document.getElementById('triggers').addEventListener('click', () => chrome.tabs.
 form.navigation.addEventListener('change', e => {
   if (e.target.checked) {
     chrome.permissions.request({
-      permissions: ['declarativeNetRequestWithHostAccess'],
       origins: ['*://*/*']
     }, granted => {
       const lastError = chrome.runtime.lastError;

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.5.6",
+  "version": "0.5.7",
   "name": "External Application Launcher",
   "description": "Run any external application with custom arguments from the browser toolbar or context menu to send links, text and more",
   "permissions": [
@@ -10,10 +10,10 @@
     "nativeMessaging",
     "downloads",
     "notifications",
+    "declarativeNetRequestWithHostAccess",
     "scripting"
   ],
   "optional_permissions": [
-    "declarativeNetRequestWithHostAccess",
     "tabs"
   ],
   "optional_host_permissions": [
@@ -21,7 +21,13 @@
   ],
   "homepage_url": "https://webextension.org/listing/external-application-button.html",
   "background": {
-    "service_worker": "worker.js"
+    "service_worker": "worker.js",
+    "scripts": [
+      "termlib_parser.js",
+      "navigation.js",
+      "triggers/core.js",
+      "worker.js"
+    ]
   },
   "offline_enabled": true,
   "options_ui": {
@@ -70,6 +76,12 @@
     },
     "shortcut-9": {
       "description": "Custom Shortcut (9)"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{65b77238-bb05-470a-a445-ec0efe1d66c4}",
+      "strict_min_version": "128.0"
     }
   }
 }
