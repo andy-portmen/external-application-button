@@ -182,8 +182,25 @@ function update() {
         title: chrome.runtime.getManifest().name
       });
     }
+
+    const sorted = (a, b) => {
+      const ai = prefs.apps[a]?.index;
+      const bi = prefs.apps[b]?.index;
+
+      if (ai && bi) {
+        return ai - bi;
+      }
+      if (ai) {
+        return -1;
+      }
+      if (bi) {
+        return 1;
+      }
+      return 0;
+    };
+
     chrome.contextMenus.removeAll(() => {
-      Object.keys(prefs.apps).filter(k => {
+      const ids = Object.keys(prefs.apps).filter(k => {
         const context = prefs.apps[k].context;
         if (!context) {
           return false;
@@ -194,7 +211,11 @@ function update() {
         else {
           return context.length;
         }
-      }).forEach(id => {
+      });
+
+      ids.sort(sorted);
+
+      ids.forEach(id => {
         let pattern = ['*://*/*', 'file://*/*'];
         if (prefs.apps[id].pattern) {
           const tmp = prefs.apps[id].pattern;
@@ -254,6 +275,8 @@ ${e.message}`);
         }
       });
       const bi = Object.keys(prefs.apps).filter(k => prefs.apps[k].toolbar);
+      bi.sort(sorted);
+
       bi.forEach((id, index) => {
         chrome.contextMenus.create({
           id: 'change-to-' + id,

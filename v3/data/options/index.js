@@ -19,6 +19,7 @@ const form = {
   filters: app.querySelector('[data-id=filters]'),
   redirects: app.querySelector('[data-id=redirects]'),
   navigation: app.querySelector('[data-id=navigation]'),
+  index: app.querySelector('[data-id=index]'),
   icon: app.querySelector('[data-id=icon]'),
   errors: app.querySelector('[data-id=errors]'),
   quotes: app.querySelector('[data-id=quotes]'),
@@ -79,7 +80,7 @@ chrome.storage.local.get({
 function save(o) {
   const {
     id, icon, errors, quotes, closeme, changestate, name,
-    path, args, pre, post, toolbar, context
+    path, args, pre, post, toolbar, context, index
   } = o;
   let {pattern, filters, redirects} = o;
 
@@ -105,7 +106,8 @@ function save(o) {
       context,
       pattern,
       filters,
-      redirects
+      redirects,
+      index
     };
     chrome.storage.local.set(prefs, () => {
       update(id);
@@ -131,6 +133,7 @@ function collect(callback) {
   const toolbar = form.toolbar.checked;
   const menuitem = form.context.querySelector(':checked');
   const redirects = form.navigation.checked ? form.redirects.value : '';
+  const index = form.index.valueAsNumber ? Math.max(form.index.valueAsNumber, 1) : '';
   if (!toolbar && !menuitem && redirects === '') {
     return show('Select a placement for this application, or configure automatic navigation');
   }
@@ -148,7 +151,7 @@ function collect(callback) {
 
   const s = {
     id, name, errors, quotes, closeme, changestate, path,
-    args, pre, post, toolbar, context, pattern, filters, redirects
+    args, pre, post, toolbar, context, pattern, filters, redirects, index
   };
 
   if (icon) {
@@ -271,6 +274,8 @@ list.addEventListener('change', () => {
       if (form.redirects.value) {
         form.navigation.checked = true;
       }
+      form.index.value = prefs.apps[list.value].index || '';
+
       app.dataset.file = prefs.apps[list.value].icon;
       form.icon.value = '';
       app.dataset.id = list.value;

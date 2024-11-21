@@ -37,12 +37,14 @@ select {
 }
 select,
 input[type="button"],
+input[type="number"],
 input[type="text"] {
   height: 28px;
   line-height: 28px;
   border: solid 1px #ccc;
 }
 textarea,
+input[type="number"],
 input[type="text"] {
   box-sizing: border-box;
   border: none;
@@ -50,7 +52,9 @@ input[type="text"] {
   width: 100%;
   font-size: 12px;
 }
+input[type="number"],
 input[type="text"] {
+  width: calc(100% - 5px);
   background-color: #f3f3f3;
   text-indent: 5px;
 }
