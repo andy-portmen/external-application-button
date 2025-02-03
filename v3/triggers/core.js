@@ -114,7 +114,6 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       func: (id, rid) => {
         const s = document.createElement('script');
         s.id = id;
-        document.documentElement.append(s);
         s.addEventListener('run', e => chrome.runtime.sendMessage({
           method: 'execute-action',
           id: rid,

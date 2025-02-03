@@ -385,25 +385,28 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
       extrap = btoa(binaryString);
     }
 
+    // https://github.com/andy-portmen/external-application-button/issues/111
+    // test by setting the tab title to: testing " ' \t \\r - & () *
+    const quote = s => s ? s.replaceAll('\\', '\\\\').replaceAll('"', `\\"`).replaceAll(`'`, `\\'`) : s;
+
     const lineBuffer = app.args
+      .replace(/\\/g, '\\\\') // what if args include "\d"
       .replace(/\[EXTRA\]/g, extrap)
-      .replace(/\[TITLE\]/g, tab.title)
+      .replace(/\[TITLE\]/g, quote(tab.title))
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)
       .replace(/\[PATHNAME\]/g, url.pathname)
       .replace(/\[HASH\]/g, url.hash)
       .replace(/\[PROTOCOL\]/g, url.protocol)
-      .replace(/\[SELECTIONTEXT\]/g, selectionText)
+      .replace(/\[SELECTIONTEXT\]/g, quote(selectionText))
       .replace(/\[DOWNLOADED_PATH\]/g, dPath)
       .replace(/\[FILENAME\]/g, app.filename)
       .replace(/\[REFERRER\]/g, referrer)
       .replace(/\[USERAGENT\]/g, userAgent)
-      .replace(/\[COOKIE\]/g, cookie)
-      .replace(/\[PRE_SCRIPT:\s*(\d+)\]/g, (str, n) => preArray[n] || '')
-      .replace(/\[PRE_SCRIPT\]/g, pre)
-      .replace(/\[PROMPT[^]*\]/g, sPrompt)
-      .replace(/\\/g, '\\\\');
-
+      .replace(/\[COOKIE\]/g, quote(cookie))
+      .replace(/\[PRE_SCRIPT:\s*(\d+)\]/g, (str, n) => quote(preArray[n] || ''))
+      .replace(/\[PRE_SCRIPT\]/g, quote(pre))
+      .replace(/\[PROMPT[^]*\]/g, quote(sPrompt));
     const termref = {
       lineBuffer
     };
@@ -431,11 +434,13 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
     if (app.quotes) {
       termref.argv = termref.argv.map((a, i) => {
         if (termref.argQL[i]) {
-          return termref.argQL[i] + a + termref.argQL[i];
+          return termref.argQL[i] + a.replaceAll(termref.argQL[i], '\\' + termref.argQL[i]) + termref.argQL[i];
         }
         return a;
       });
     }
+
+    console.log(termref.argv);
 
     return termref.argv;
   }
