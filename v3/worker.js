@@ -117,7 +117,7 @@ function response(res, tabId, frameId, post) {
       args: [code]
     }).catch(e => {
       console.warn(e);
-      notify(e);
+      notify('[Post Script] ' + e.message);
     });
   }
 }
@@ -557,7 +557,7 @@ function execute(app, tab, selectionText, frameId, extra = '') {
       }
     }).catch(e => {
       console.warn(e);
-      notify('Cannot run pre-script: ' + e.message);
+      notify('[Pre Script] ' + e.message);
       next();
     });
   }
