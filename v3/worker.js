@@ -110,7 +110,16 @@ function response(res, tabId, frameId, post) {
       },
       func: code => {
         const s = document.createElement('script');
-        s.textContent = code;
+        try {
+          s.textContent = code;
+        }
+        // YouTube
+        catch (e) {
+          const policy = window.trustedTypes.createPolicy('eab-policy', {
+            createScript: input => input
+          });
+          s.textContent = policy.createScript(code);
+        }
         document.body.append(s);
         s.remove();
       },
@@ -440,8 +449,6 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
       });
     }
 
-    console.log(termref.argv);
-
     return termref.argv;
   }
 
@@ -528,15 +535,25 @@ function execute(app, tab, selectionText, frameId, extra = '') {
       },
       // use "document.currentScript.output" to assign this value. Does not work on FF so we use custom events
       func: code => {
+        code += `; document.currentScript.dispatchEvent(new CustomEvent('output', {
+          detail: document.currentScript.output
+        }))`;
         let output;
         const s = document.createElement('script');
         s.addEventListener('output', e => {
           e.stopPropagation();
           output = e.detail;
         });
-        s.textContent = code + `; document.currentScript.dispatchEvent(new CustomEvent('output', {
-          detail: document.currentScript.output
-        }))`;
+        try {
+          s.textContent = code;
+        }
+        // YouTube
+        catch (e) {
+          const policy = window.trustedTypes.createPolicy('eab-policy', {
+            createScript: input => input
+          });
+          s.textContent = policy.createScript(code);
+        }
         (document.body || document.documentElement).append(s);
         s.remove();
 
