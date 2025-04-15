@@ -354,21 +354,11 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
   }
 
   async function step() {
-    const pp = () => { // [PROMPT|message|value]
-      const parts = app.args.split('[PROMPT')[1].split(']')[0];
-      const r = parts.split('|');
+    // https://github.com/andy-portmen/external-application-button/issues/111
+    // test by setting the tab title to: testing " ' \t \\r - & () *
+    const quote = s => s ? s.replaceAll('\\', '\\\\').replaceAll('"', `\\"`).replaceAll(`'`, `\\'`) : s;
 
-      return prompt(r[1] || 'User Input', r[2] || '').then(a => {
-        if (!a) {
-          throw Error('USER_ABORT');
-        }
-        return a;
-      });
-    };
-
-    const sPrompt = app.args.includes('[PROMPT') ? await pp() : '';
-
-    const dPath = app.args.includes('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '';
+    const dPath = quote(app.args.includes('[DOWNLOADED_PATH]') ? await download(url.href).then(d => d.filename) : '');
 
     let preArray = [];
     // is "pre" an array
@@ -394,11 +384,11 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
       extrap = btoa(binaryString);
     }
 
-    // https://github.com/andy-portmen/external-application-button/issues/111
-    // test by setting the tab title to: testing " ' \t \\r - & () *
-    const quote = s => s ? s.replaceAll('\\', '\\\\').replaceAll('"', `\\"`).replaceAll(`'`, `\\'`) : s;
+    const termref = {
+      lineBuffer: ''
+    };
 
-    const lineBuffer = app.args
+    termref.lineBuffer = app.args
       .replace(/\\/g, '\\\\') // what if args include "\d"
       .replace(/\[EXTRA\]/g, extrap)
       .replace(/\[TITLE\]/g, quote(tab.title))
@@ -414,11 +404,24 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
       .replace(/\[USERAGENT\]/g, userAgent)
       .replace(/\[COOKIE\]/g, quote(cookie))
       .replace(/\[PRE_SCRIPT:\s*(\d+)\]/g, (str, n) => quote(preArray[n] || ''))
-      .replace(/\[PRE_SCRIPT\]/g, quote(pre))
-      .replace(/\[PROMPT[^]*\]/g, quote(sPrompt));
-    const termref = {
-      lineBuffer
-    };
+      .replace(/\[PRE_SCRIPT\]/g, quote(pre));
+
+    // use keywords in prompt
+    if (app.args.includes('[PROMPT')) {
+      const pp = () => { // [PROMPT|message|value]
+        const parts = termref.lineBuffer.split('[PROMPT')[1].split(']')[0];
+        const r = parts.split('|');
+
+        return prompt(r[1] || 'User Input', r[2] || '').then(a => {
+          if (!a) {
+            throw Error('USER_ABORT');
+          }
+          return a;
+        });
+      };
+      termref.lineBuffer = termref.lineBuffer.replace(/\[PROMPT[^]*\]/g, quote(await pp()));
+    }
+
     const parser = new Parser();
     // fixes https://github.com/andy-portmen/external-application-button/issues/5
     parser.escapeExpressions = {};
@@ -491,6 +494,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
 function execute(app, tab, selectionText, frameId, extra = '') {
   const next = pre => argv(app, tab.url, selectionText, tab, pre, extra).then(args => {
+    console.info('[executing]', app.path, args);
+
     const result = r => {
       if (app.closeme && tab.id) {
         chrome.tabs.remove(tab.id);

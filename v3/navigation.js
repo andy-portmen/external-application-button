@@ -8,6 +8,10 @@ function regExpEscape(s) {
 }
 
 const navigate = () => {
+  if (!chrome.declarativeNetRequest) {
+    return;
+  }
+
   chrome.storage.local.get({
     apps: {}
   }, prefs => {
@@ -34,9 +38,7 @@ const navigate = () => {
         }
       }
     }
-    if (addRules.length === 0 && !chrome.declarativeNetRequest) {
-      return;
-    }
+
     try {
       chrome.declarativeNetRequest.getSessionRules(rs => chrome.declarativeNetRequest.updateSessionRules({
         removeRuleIds: rs.map(r => r.id),
