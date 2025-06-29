@@ -522,8 +522,14 @@ function execute(app, tab, selectionText, frameId, extra = '') {
         cmd: 'env'
       }, res => {
         const env = ((res || {}).env || {});
+
+        // stdin
+        const stdin = args.filter(s => s && s.endsWith('@stdin')).map(s => s.slice(0, -6));
+        args = args.filter(s => s.endsWith('@stdin') === false);
+
         chrome.runtime.sendNativeMessage(application, {
           cmd: 'exec',
+          stdin,
           command: app.path.replace(/%([^%]+)%/g, (a, b) => env[b] || b),
           arguments: args,
           properties: app.quotes ? {windowsVerbatimArguments: true} : {}
