@@ -26,7 +26,8 @@
       "termlib_parser.js",
       "navigation.js",
       "triggers/core.js",
-      "worker.js"
+      "worker.js",
+      "mcp-server.js"
     ]
   },
   "offline_enabled": true,

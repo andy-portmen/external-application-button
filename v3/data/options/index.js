@@ -1,4 +1,4 @@
-'use strict';
+/* global mcp */
 
 const app = document.getElementById('app');
 const list = document.getElementById('list');
@@ -303,13 +303,34 @@ document.getElementById('exaccess').addEventListener('change', e => chrome.stora
   exaccess: e.target.checked
 }));
 
+// MCP
+document.getElementById('mcp-server').addEventListener('change', e => chrome.storage.local.set({
+  'mcp-server': e.target.checked
+}));
+document.getElementById('mcp-log').addEventListener('change', e => chrome.storage.local.set({
+  'mcp-log': e.target.checked
+}));
+document.getElementById('mcp-extensions').addEventListener('change', e => chrome.storage.local.set({
+  'mcp-extensions': e.target.value.split(/\s*,\s*/).filter((s, n, l) => s && l.indexOf(s) === n)
+}));
+
 chrome.storage.local.get({
-  faqs: true,
-  exaccess: false
+  'faqs': true,
+  'exaccess': false,
+  'mcp-server': false,
+  'mcp-log': false,
+  'mcp-extensions': []
 }, prefs => {
   document.getElementById('faqs').checked = prefs.faqs;
   document.getElementById('exaccess').checked = prefs.exaccess;
+  document.getElementById('mcp-server').checked = prefs['mcp-server'];
+  document.getElementById('mcp-log').checked = prefs['mcp-log'];
+  document.getElementById('mcp-extensions').value = prefs['mcp-extensions'].join(', ');
 });
+document.getElementById('mcp-socket').textContent = mcp.socket().replaceAll('\\', '\\\\');
+console.log(mcp.socket());
+
+
 // export
 document.getElementById('export').addEventListener('click', () => {
   chrome.storage.local.get(null, prefs => {

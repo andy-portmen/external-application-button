@@ -213,3 +213,12 @@ label input[type="checkbox"] {
 .gap {
   gap: 5px;
 }
+.two {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  align-items: center;
+  grid-gap: 5px;
+}
+.nowrap {
+  white-space: nowrap;
+}

@@ -1,9 +1,10 @@
-/* global Parser */
+/* global Parser, mcp */
 
 if (typeof importScripts !== 'undefined') {
   self.importScripts('termlib_parser.js');
   self.importScripts('navigation.js');
   self.importScripts('triggers/core.js');
+  self.importScripts('mcp-server.js');
 }
 
 const application = 'com.add0n.node';
@@ -734,6 +735,26 @@ chrome.runtime.onInstalled.addListener(e => {
       console.info('*** Configuring the extension for the first run ***');
       chrome.storage.local.set(prefs);
     }).catch(() => {});
+  }
+});
+
+/* MCP Server */
+chrome.storage.onChanged.addListener(ps => {
+  if ('mcp-server' in ps) {
+    if (ps['mcp-server'].newValue) {
+      mcp.install();
+    }
+    else {
+      mcp.uninstall();
+    }
+  }
+});
+
+chrome.storage.local.get({
+  'mcp-server': false
+}).then(prefs => {
+  if (prefs['mcp-server']) {
+    mcp.install();
   }
 });
 
