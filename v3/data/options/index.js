@@ -328,8 +328,6 @@ chrome.storage.local.get({
   document.getElementById('mcp-extensions').value = prefs['mcp-extensions'].join(', ');
 });
 document.getElementById('mcp-socket').textContent = mcp.socket().replaceAll('\\', '\\\\');
-console.log(mcp.socket());
-
 
 // export
 document.getElementById('export').addEventListener('click', () => {
