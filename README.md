@@ -12,7 +12,7 @@ This extension lets you create a customizable toolbar button (action button) and
 [![Preview](https://img.youtube.com/vi/sTOHWbX7dKU/0.jpg)](https://www.youtube.com/watch?v=sTOHWbX7dKU)
 
 ### MCP Server
-This extension can be used with coding agents such as OpenCode. Also it can help other extensions to introduce their tools to the agents. Read [FAQs page](https://webextension.org/listing/external-application-button.htmll) for more info.
+This extension can be used with coding agents such as OpenCode. Also it can help other extensions to introduce their tools to the agents. Read [FAQs page](https://webextension.org/listing/external-application-button.html) for more info.
 
 
 ### Links

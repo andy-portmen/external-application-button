@@ -2,30 +2,38 @@ const mcp = {
   port: undefined,
   log: false
 };
-mcp.socket = () => {
+mcp.socket = async () => {
   const ua = navigator.userAgent;
   const isWindows = navigator.userAgentData?.platform === 'Windows' || navigator.platform.startsWith('Win');
 
   const prefix = isWindows ? '\\\\.\\pipe\\exb-' : '/tmp/exb-';
 
+  const prefs = await chrome.storage.local.get({
+    'mcp-socket-postfix': ''
+  });
+  const postfix = prefs['mcp-socket-postfix'].replace(/[^A-Za-z0-9._-]/g, '').slice(0, 32);
+  const suffix = (postfix ? '-' + postfix : '') + '.sock';
+
   if (ua.indexOf('Firefox') > -1) {
-    return prefix + 'firefox.sock';
+    return prefix + 'firefox' + suffix;
   }
   else if (ua.indexOf('Edg') > -1) {
-    return prefix + 'edge.sock';
+    return prefix + 'edge' + suffix;
   }
   else if (ua.indexOf('OPR') > -1 || ua.indexOf('Opera') > -1) {
-    return prefix + 'opera.sock';
+    return prefix + 'opera' + suffix;
   }
   else if (ua.indexOf('Chrome') > -1 && ua.indexOf('Edg') === -1) {
-    return prefix + 'chrome.sock';
+    return prefix + 'chrome' + suffix;
   }
-  return prefix + 'unknown.sock';
+  return prefix + 'unknown' + suffix;
 };
 
 mcp.install = async () => {
   const extraTools = new Map();
-  const socketPath = mcp.socket();
+  const socketPath = await mcp.socket();
+  const oldSocketPath = mcp.path && mcp.path !== socketPath ? mcp.path : '';
+  mcp.path = socketPath;
 
   const prefs = await chrome.storage.local.get({
     'mcp-extensions': [],
@@ -103,6 +111,10 @@ mcp.install = async () => {
         console.info('running', extensionId, message);
         const eport = chrome.runtime.connect(extensionId);
 
+        port.onDisconnect.addListener(() => {
+          eport.disconnect();
+        });
+
         eport.onMessage.addListener(post);
         eport.onDisconnect.addListener(() => {
           const e = chrome.runtime.lastError;
@@ -132,7 +144,7 @@ mcp.install = async () => {
   // register the Unix domain socket and observe it
   port.postMessage({
     permissions: ['net', 'fs', 'crypto'],
-    args: [socketPath, [...extraTools.values()].flat()],
+    args: [socketPath, [...extraTools.values()].flat(), oldSocketPath],
     uuid,
     script: `
 const net = require("net");
@@ -143,6 +155,10 @@ const socketPath = args[0];
 
 if (fs.existsSync(socketPath)) {
   fs.unlinkSync(socketPath);
+}
+// remove the stale socket file of a previous run (e.g. postfix changed)
+if (args[2] && args[2] !== socketPath && fs.existsSync(args[2])) {
+  fs.unlinkSync(args[2]);
 }
 
 const tools = [{

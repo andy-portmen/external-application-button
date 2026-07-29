@@ -313,21 +313,38 @@ document.getElementById('mcp-log').addEventListener('change', e => chrome.storag
 document.getElementById('mcp-extensions').addEventListener('change', e => chrome.storage.local.set({
   'mcp-extensions': e.target.value.split(/\s*,\s*/).filter((s, n, l) => s && l.indexOf(s) === n)
 }));
+document.getElementById('mcp-socket-postfix').addEventListener('change', e => {
+  const value = e.target.value.replace(/[^A-Za-z0-9._-]/g, '').slice(0, 32);
+  e.target.value = value;
+  chrome.storage.local.set({
+    'mcp-socket-postfix': value
+  });
+});
 
 chrome.storage.local.get({
   'faqs': true,
   'exaccess': false,
   'mcp-server': false,
   'mcp-log': false,
-  'mcp-extensions': []
+  'mcp-extensions': [],
+  'mcp-socket-postfix': ''
 }, prefs => {
   document.getElementById('faqs').checked = prefs.faqs;
   document.getElementById('exaccess').checked = prefs.exaccess;
   document.getElementById('mcp-server').checked = prefs['mcp-server'];
   document.getElementById('mcp-log').checked = prefs['mcp-log'];
   document.getElementById('mcp-extensions').value = prefs['mcp-extensions'].join(', ');
+  document.getElementById('mcp-socket-postfix').value = prefs['mcp-socket-postfix'];
 });
-document.getElementById('mcp-socket').textContent = mcp.socket().replaceAll('\\', '\\\\');
+const updateSocketPath = () => mcp.socket().then(path => {
+  document.getElementById('mcp-socket').textContent = path.replaceAll('\\', '\\\\');
+});
+updateSocketPath();
+chrome.storage.onChanged.addListener(ps => {
+  if ('mcp-socket-postfix' in ps) {
+    updateSocketPath();
+  }
+});
 
 // export
 document.getElementById('export').addEventListener('click', () => {

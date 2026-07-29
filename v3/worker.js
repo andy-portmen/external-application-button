@@ -748,6 +748,11 @@ chrome.storage.onChanged.addListener(ps => {
       mcp.uninstall();
     }
   }
+  else if ('mcp-socket-postfix' in ps && mcp.port) {
+    // restart the server so the new socket path takes effect
+    mcp.uninstall();
+    mcp.install();
+  }
 });
 
 chrome.storage.local.get({
