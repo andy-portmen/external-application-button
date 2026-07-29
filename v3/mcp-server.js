@@ -29,28 +29,34 @@ mcp.socket = async () => {
   return prefix + 'unknown' + suffix;
 };
 
+// fetch extra tools from other extensions; called once the socket is ready
+mcp.tools = async () => {
+  const prefs = await chrome.storage.local.get({
+    'mcp-extensions': []
+  });
+
+  for (const id of prefs['mcp-extensions']) {
+    try {
+      const r = await chrome.runtime.sendMessage(id, {cmd: 'mcp.json'});
+      mcp.extraTools.set(id, r.result.tools);
+      console.info('MCP: adding tools from extension', id, r.result.tools.map(t => t.name));
+    }
+    catch (e) {
+      console.warn('MCP: cannot add tools for', id, e);
+    }
+  }
+};
+
 mcp.install = async () => {
-  const extraTools = new Map();
+  mcp.extraTools = new Map();
   const socketPath = await mcp.socket();
   const oldSocketPath = mcp.path && mcp.path !== socketPath ? mcp.path : '';
   mcp.path = socketPath;
 
   const prefs = await chrome.storage.local.get({
-    'mcp-extensions': [],
     'mcp-log': false
   });
   mcp.log = prefs['mcp-log'];
-
-  for (const id of prefs['mcp-extensions']) {
-    try {
-      const r = await chrome.runtime.sendMessage(id, {cmd: 'mcp.json'});
-      extraTools.set(id, r.result.tools);
-      console.info('Adding new tools from', id, r.result.tools.length);
-    }
-    catch (e) {
-      console.error('cannot add tools for', id, e);
-    }
-  }
 
   const port = mcp.port = chrome.runtime.connectNative('com.add0n.node');
   const uuid = crypto.randomUUID();
@@ -88,7 +94,7 @@ mcp.install = async () => {
         message = request.params.arguments.message;
       }
       else {
-        for (const [id, tools] of extraTools.entries()) {
+        for (const [id, tools] of mcp.extraTools.entries()) {
           for (const tool of tools) {
             if (tool.name === request.params.name) {
               message = request.params.arguments;
@@ -130,7 +136,19 @@ mcp.install = async () => {
     }
     else if (request.type === 'report' || request.cmd === 'report') {
       if (request.state === 'socket-ready') {
-        console.info('MCP server is ready. Socket path:', socketPath);
+        console.info('MCP server is ready. Unix socket path:', socketPath);
+        // the socket is up; fetch extra tools and pass them to the script
+        mcp.tools().then(() => port.postMessage({
+          cmd: 'post-message',
+          uuid,
+          data: {
+            cmd: 'set-tools',
+            tools: [...mcp.extraTools.values()].flat()
+          }
+        }));
+      }
+      else if (request.state === 'tools-ready') {
+        console.info('MCP tools are ready:', request.tools);
       }
       else if (mcp.log) {
         console.info(request);
@@ -144,7 +162,7 @@ mcp.install = async () => {
   // register the Unix domain socket and observe it
   port.postMessage({
     permissions: ['net', 'fs', 'crypto'],
-    args: [socketPath, [...extraTools.values()].flat(), oldSocketPath],
+    args: [socketPath, oldSocketPath],
     uuid,
     script: `
 const net = require("net");
@@ -157,8 +175,8 @@ if (fs.existsSync(socketPath)) {
   fs.unlinkSync(socketPath);
 }
 // remove the stale socket file of a previous run (e.g. postfix changed)
-if (args[2] && args[2] !== socketPath && fs.existsSync(args[2])) {
-  fs.unlinkSync(args[2]);
+if (args[1] && args[1] !== socketPath && fs.existsSync(args[1])) {
+  fs.unlinkSync(args[1]);
 }
 
 const tools = [{
@@ -173,12 +191,21 @@ const tools = [{
     required: ["extensionId", "message"]
   }
 }];
-// add extra tools
-if (args[1] && Array.isArray(args[1])) {
-  for (const tool of args[1]) {
-    tools.push(tool);
+
+// receive extra tools from the extension once they are loaded
+connect(msg => {
+  if (msg.cmd === "set-tools" && Array.isArray(msg.tools)) {
+    tools.length = 1;
+    for (const tool of msg.tools) {
+      tools.push(tool);
+    }
+    push({
+      cmd: "report",
+      state: "tools-ready",
+      tools: tools.map(t => t.name)
+    });
   }
-}
+});
 
 const rpc = {
   message(id, result) {
@@ -265,7 +292,7 @@ const server = net.createServer(socket => {
     if (msg.cmd === "send") {
       socket.write(JSON.stringify(msg.data) + "\\n");
     }
-    else {
+    else if (msg.cmd !== "set-tools") {
       push({
         cmd: "error",
         message: msg.cmd + ' command is not known by this script'
@@ -341,4 +368,5 @@ server.listen(socketPath, () => {
 mcp.uninstall = () => {
   mcp.port?.disconnect();
   delete mcp.port;
+  delete mcp.extraTools;
 };

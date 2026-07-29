@@ -271,10 +271,10 @@ Clear Blocked List: This extension allows other extensions/applications to run n
       <label><input type="checkbox" id="mcp-server"> Act as an MCP server</label>
       <span>Logs</span>
       <label><input type="checkbox" id="mcp-log"> Show MPC communication reports on browser console</label>
-      <span class="nowrap">Extension ids</span>
-      <input type="text" id="mcp-extensions" placeholder="Comma-separated list of available extension IDs that support MCP communication.">
       <span class="nowrap">Socket postfix</span>
       <input type="text" id="mcp-socket-postfix" placeholder="Optional custom postfix for the socket path (e.g. profile name). Letters, digits, dots, dashes and underscores only.">
+      <span class="nowrap">Extension IDs</span>
+      <input type="text" id="mcp-extensions" placeholder="Comma-separated list of available extension IDs that support MCP communication.">
     </div>
     <div class="note">When enabled, code agents like OpenCode can interact with this extension through the Unix domain socket at <code id="mcp-socket">/tmp/exb-chrome.sock</code> and with other extensions exposing tools via the <code>mcp.json</code> command. Refer to the FAQs page for integration details. Set a socket postfix to run a separate socket on each profile of the same browser.
 
