@@ -385,9 +385,27 @@ document.getElementById('import').addEventListener('click', () => {
         fileInput.remove();
         const json = JSON.parse(event.target.result);
         chrome.storage.local.clear(() => {
+          const clearError = chrome.runtime.lastError;
+          if (clearError) {
+            return show(clearError.message);
+          }
           chrome.storage.local.set(json, () => {
-            window.close();
-            chrome.runtime.reload();
+            const setError = chrome.runtime.lastError;
+            if (setError) {
+              return show(setError.message);
+            }
+            chrome.runtime.sendMessage({
+              method: 'refresh-context-menus'
+            }, refreshed => {
+              const refreshError = chrome.runtime.lastError;
+              if (refreshError) {
+                return show(refreshError.message);
+              }
+              if (refreshed !== true) {
+                return show('Settings were imported, but the context menus could not be refreshed.');
+              }
+              window.close();
+            });
           });
         });
       };
