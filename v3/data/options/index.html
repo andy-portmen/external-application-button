@@ -14,6 +14,12 @@
       <button type="button" data-tab="mcp">MCP Server</button>
       <button type="button" data-tab="misc">Misc</button>
       <button type="button" data-tab="native">Native Integration</button>
+      <button type="button" data-tab="triggers">Triggers</button>
+      <div id="tabs-spacer"></div>
+      <div id="tabs-actions">
+        <button type="button" id="support">Support Development</button>
+        <button type="button" id="ofq">Open FAQs page</button>
+      </div>
     </nav>
     <div class="content">
       <section id="tab-app">
@@ -184,13 +190,10 @@ Make sure to restart the agent after this feature is turned on.</div>
           </div>
           <div class="note" style="margin-bottom: 10px;">Import Settings: This will overwrite all the current settings. Like factory reset before applying the new settings. Make sure to backup your current settings before using this option.</div>
           <div style="margin-bottom: 10px;">
-            <input type="button" value="Support Development" id="support">
-            <input type="button" value="Open FAQs page" id="ofq">
             <input type="button" value="Tabs Permission" id="tabs-permission" title="Use this button to allow the extension to access browser tabs even when the tab is not focused. This is useful if you want to use triggers on download start or end to run external applications.">
           </div>
           <div>
             <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using this extension">
-            <input type="button" value="Manage Triggers" data-cmd="triggers" id="triggers" title="Manage triggers to open external applications">
           </div>
           <div class="note" style="margin-top: 10px;">Clear Blocked List: This extension allows other extensions/applications to run native commands after the user accepts the request. This list contains the extension IDs that already requested the permission to run native commands and the user rejected the request. So these extensions are being blocked from running native commands.</div>
         </div>
@@ -208,6 +211,40 @@ Make sure to restart the agent after this feature is turned on.</div>
         </ol>
         <div class="note">The "native client" is a small open-source NodeJS-based helper that connects the browser to your external applications (required for running commands and for the MCP server). If a system NodeJS is detected, it will be used; otherwise the package ships a portable version. The MCP Server requires native client version 1.1.0 or higher. To install manually, browse <a target="_blank" href="https://github.com/andy-portmen/native-client/releases">all releases</a>. To uninstall, run <code class="nix">./uninstall.sh</code><code class="win">uninstall.bat</code> from the extracted directory.</div>
       </section>
+      <section id="tab-triggers" hidden>
+        <template id="trigger-template">
+          <div class="trigger">
+            <input type="checkbox">
+            <select class="name"></select>
+            <select class="action">
+              <option value="shortcut-1">Custom Shortcut (1)</option>
+              <option value="shortcut-2">Custom Shortcut (2)</option>
+              <option value="shortcut-3">Custom Shortcut (3)</option>
+              <option value="shortcut-4">Custom Shortcut (4)</option>
+              <option value="shortcut-5">Custom Shortcut (5)</option>
+              <option value="shortcut-6">Custom Shortcut (6)</option>
+              <option value="shortcut-7">Custom Shortcut (7)</option>
+              <option value="shortcut-8">Custom Shortcut (8)</option>
+              <option value="shortcut-9">Custom Shortcut (9)</option>
+              <hr>
+              <option value="download-started">Download is Started</option>
+              <option value="download-ended">Download is Finished</option>
+              <hr>
+              <option value="js">Run JavaScript</option>
+            </select>
+            <textarea rows="5" disabled placeholder="This script runs on every page. When 'document.currentScript.output' returns a value, the external application is executed and the returned value is provided in [EXTRA] argument."></textarea>
+          </div>
+        </template>
+        <div id="triggers"></div>
+        <div class="triggers-toolbar">
+          <span id="triggers-toast"></span>
+          <input type="button" id="triggers-shortcuts" value="Open Shortcuts">
+          <input type="button" id="triggers-remove" value="Remove Selected Triggers" disabled>
+          <input type="button" id="triggers-add" value="Add new Trigger" disabled>
+          <input type="button" id="triggers-save" value="Save Triggers">
+        </div>
+        <div class="note" style="margin-top: 10px">Triggers launch external applications on events like custom keyboard shortcuts, download start/finish, or a user JavaScript being executed on every page. Scripts need access to all websites; the browser asks for the permission when the "Run JavaScript" action is selected.</div>
+      </section>
     </div>
   </div>
   <dialog id="preview">
@@ -215,5 +252,6 @@ Make sure to restart the agent after this feature is turned on.</div>
   </dialog>
   <script src="/mcp-server.js"></script>
   <script src="index.js"></script>
+  <script src="triggers.js"></script>
 </body>
 </html>

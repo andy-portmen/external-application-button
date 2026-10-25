@@ -97,7 +97,8 @@ input[type="button"] {
   overflow-y: auto;
   background-color: rgba(3, 116, 255, 0.1);
 }
-#tabs button {
+#tabs button,
+#tabs-actions button {
   font: inherit;
   color: inherit;
   text-align: left;
@@ -110,11 +111,20 @@ input[type="button"] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-#tabs button:hover {
+#tabs button:hover,
+#tabs-actions button:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 #tabs button.active {
   border-left-color: #0374ff;
+}
+#tabs-spacer {
+  margin-top: auto;
+}
+#tabs-actions {
+  display: flex;
+  flex-direction: column;
+  margin: 5px;
 }
 @media only screen and (max-width: 600px) {
   .layout {
@@ -126,16 +136,20 @@ input[type="button"] {
     width: 100%;
     gap: 0;
   }
+  #tabs button.active {
+    border-left-color: transparent;
+    border-bottom-color: #0374ff;
+  }
+  #tabs-actions,
+  #tabs-spacer {
+    display: none;
+  }
   #tabs button {
     flex: 1;
     text-align: center;
     border-left: none;
     border-bottom: 3px solid transparent;
     padding: 8px 4px;
-  }
-  #tabs button.active {
-    border-left-color: transparent;
-    border-bottom-color: #0374ff;
   }
 }
 code {
@@ -402,4 +416,48 @@ body[data-os="windows"] .nix {
 }
 body[data-os="linux"] .win {
   display: none;
+}
+
+/* triggers tab */
+#tab-triggers {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) min-content;
+}
+#tab-triggers[hidden] {
+  display: none;
+}
+#tab-triggers select {
+  width: auto;
+  min-width: 140px;
+}
+#triggers {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  overflow: auto;
+  padding-right: 5px;
+}
+#triggers:empty:before {
+  content: 'Use "Add new Trigger" button to create a new trigger';
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 120%;
+}
+.trigger {
+  display: grid;
+  grid-gap: 5px;
+  grid-template-columns: min-content min-content min-content 1fr;
+  align-items: baseline;
+  margin-right: 5px;
+}
+.triggers-toolbar {
+  padding: 10px 0 5px 0;
+  justify-content: end;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+#triggers-toast {
+  color: #07c;
 }

@@ -464,10 +464,6 @@ document.getElementById('ofq').addEventListener('click', () => chrome.tabs.creat
   url: chrome.runtime.getManifest().homepage_url
 }));
 
-document.getElementById('triggers').addEventListener('click', () => chrome.tabs.create({
-  url: '/triggers/index.html'
-}));
-
 // navigation
 form.navigation.addEventListener('change', e => {
   if (e.target.checked) {
@@ -598,7 +594,7 @@ document.getElementById('native-download').addEventListener('click', () => {
 checkNativeClient();
 
 // tab navigation
-const tabButtons = [...document.querySelectorAll('#tabs button')];
+const tabButtons = [...document.querySelectorAll('#tabs button[data-tab]')];
 const tabSections = new Map(tabButtons.map(b => [b.dataset.tab, document.getElementById('tab-' + b.dataset.tab)]));
 
 function activateTab(tab, setHash = true) {
