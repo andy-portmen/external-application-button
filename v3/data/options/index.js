@@ -367,6 +367,116 @@ document.getElementById('mcp-socket-postfix').addEventListener('change', e => {
   });
 });
 
+{
+  const mcpServer = document.getElementById('mcp-server');
+  const mcpStatus = document.getElementById('mcp-status');
+  const mcpGuard = document.getElementById('mcp-guard');
+  const mcpHint = document.getElementById('mcp-enable-hint');
+  const mcpProblems = document.getElementById('mcp-problems');
+  const mcpPath = document.getElementById('mcp-socket');
+  const mcpMismatch = document.getElementById('mcp-path-mismatch');
+  const mcpFeedback = document.getElementById('mcp-copy-feedback');
+  let mcpStatusPort;
+  let copyTimeout;
+
+  // gate the "Act as an MCP server" checkbox on the native client presence and version
+  function updateMcpPrerequisites() {
+    return queryNativeClient().then(r => {
+      const ready = r.ok && versionAtLeast(r.version, [1, 1, 0]);
+      mcpGuard.hidden = ready;
+      mcpServer.disabled = ready === false;
+      mcpHint.hidden = ready;
+      if (ready === false) {
+        mcpGuard.firstElementChild.textContent = r.ok
+          ? 'MCP requires native client version 1.1.0 or higher. Version ' + r.version + ' is installed.'
+          : 'MCP requires the native client to run. Your native client is not detected.';
+      }
+      return r;
+    });
+  }
+
+  function renderMcpStatus(msg) {
+    const state = msg?.state || 'unknown';
+    const labels = {
+      off: 'Server is stopped.',
+      starting: 'Starting the MCP server…',
+      running: 'Server is running.',
+      unknown: 'checking…'
+    };
+    const dataset = {
+      off: '',
+      starting: 'warn',
+      running: 'ok'
+    };
+    mcpStatus.dataset.state = dataset[state] ?? state;
+    mcpStatus.textContent = 'Server status: ' + (labels[state] || 'unknown');
+    if (msg?.problems?.length) {
+      mcpProblems.textContent = '';
+      for (const message of msg.problems) {
+        Object.assign(mcpProblems.appendChild(document.createElement('div')), {textContent: message});
+      }
+      mcpProblems.hidden = false;
+      mcpStatus.dataset.state = 'warn';
+    }
+    else {
+      mcpProblems.hidden = true;
+    }
+
+    // effective socket path of the running server + computed path from this page
+    if (state === 'running' && msg.path) {
+      mcpPath.textContent = msg.path;
+      mcp.socket().then(computed => {
+        mcpMismatch.hidden = computed === msg.path;
+      });
+    }
+    else {
+      mcpMismatch.hidden = true;
+    }
+  }
+
+  function activateMcpTab() {
+    updateMcpPrerequisites();
+    if (!mcpStatusPort) {
+      mcpStatusPort = chrome.runtime.connect({name: 'mcp-status'});
+      mcpStatusPort.onMessage.addListener(renderMcpStatus);
+      mcpStatusPort.onDisconnect.addListener(() => mcpStatusPort = null);
+    }
+  }
+  function deactivateMcpTab() {
+    mcpStatusPort?.disconnect();
+    mcpStatusPort = null;
+  }
+
+  document.getElementById('mcp-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(mcpPath.textContent).then(() => {
+      mcpFeedback.hidden = false;
+      clearTimeout(copyTimeout);
+      copyTimeout = setTimeout(() => mcpFeedback.hidden = true, 1500);
+    });
+  });
+  document.getElementById('mcp-native-goto').addEventListener('click', () => activateTab('native'));
+  document.getElementById('mcp-native-download').addEventListener('click', () => {
+    document.getElementById('native-download').click();
+  });
+  for (const a of document.querySelectorAll('.mcp-help [data-tab]')) {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      activateTab(a.dataset.tab);
+    });
+  }
+
+  window.mcpTab = {
+    activate: activateMcpTab,
+    deactivate: deactivateMcpTab
+  };
+}
+document.getElementById('mcp-server').addEventListener('change', e => {
+  if (e.target.checked && e.target.disabled === false) {
+    // the server is installed right away; the status panel reports the progress
+    window.mcpTab?.activate();
+  }
+});
+
 chrome.storage.local.get({
   'faqs': true,
   'exaccess': false,
@@ -540,21 +650,47 @@ function setNativeStatus(state, message, version) {
   }
 }
 
+function queryNativeClient() {
+  return new Promise(resolve => {
+    chrome.runtime.sendNativeMessage(nativeApp, {
+      cmd: 'version'
+    }, response => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        console.warn(lastError);
+        return resolve({
+          ok: false,
+          message: 'Native client is not detected. Follow the steps below to install it'
+        });
+      }
+      if (response) {
+        return resolve({
+          ok: true,
+          version: response.version,
+          message: 'Native client version ' + response.version + ' is installed'
+        });
+      }
+      resolve({
+        ok: false,
+        message: 'Native client is not detected. Follow the steps below to install it'
+      });
+    });
+  });
+}
+
+// 1.1.0 is the minimum supported version to run the MCP server
+function versionAtLeast(version, min = [1, 1, 0]) {
+  if (!version) {
+    return false;
+  }
+  const parts = version.split('.').map(Number);
+  const m = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
+  return m >= min[0] * 100 + (min[1] || 0) * 10 + (min[2] || 0);
+}
+
 function checkNativeClient() {
   setNativeStatus('unknown', 'Checking the native client…');
-  chrome.runtime.sendNativeMessage(nativeApp, {
-    cmd: 'version'
-  }, response => {
-    const lastError = chrome.runtime.lastError;
-    if (lastError) {
-      console.warn(lastError);
-      return setNativeStatus('error', 'Native client is not detected. Follow the steps below to install it');
-    }
-    if (response) {
-      return setNativeStatus('ok', 'Native client version ' + response.version + ' is installed', response.version);
-    }
-    setNativeStatus('error', 'Native client is not detected. Follow the steps below to install it');
-  });
+  queryNativeClient().then(r => setNativeStatus(r.ok ? 'ok' : 'error', r.message, r.version));
 }
 
 document.getElementById('native-check').addEventListener('click', checkNativeClient);
@@ -608,10 +744,19 @@ function activateTab(tab, setHash = true) {
   }
 }
 
+let activeMcpTab = false;
 tabButtons.forEach(b => b.addEventListener('click', () => {
   activateTab(b.dataset.tab);
   if (b.dataset.tab === 'native') {
     checkNativeClient();
+  }
+  else if (b.dataset.tab === 'mcp') {
+    window.mcpTab?.activate();
+    activeMcpTab = true;
+  }
+  else if (activeMcpTab) {
+    window.mcpTab?.deactivate();
+    activeMcpTab = false;
   }
 }));
 
@@ -619,6 +764,9 @@ window.addEventListener('hashchange', () => activateTab(location.hash.slice(1), 
 
 const initialTab = location.hash.slice(1);
 activateTab(initialTab, false);
+if (!document.getElementById('tab-mcp').hidden) {
+  window.mcpTab?.activate();
+}
 
 // placement sub-tabs
 const ptabButtons = [...document.querySelectorAll('#placement-tabs button')];

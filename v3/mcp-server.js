@@ -1,7 +1,48 @@
 const mcp = {
   port: undefined,
-  log: false
+  log: false,
+  // 'off' (native port not connected), 'starting' (native script not up yet),
+  // 'running' (socket-ready received)
+  state: 'off',
+  path: undefined,
+  problems: [],
+  statusPorts: new Set()
 };
+
+// broadcast the current state to all listeners on the "mcp-status" ports
+mcp.setState = (state, error) => {
+  mcp.state = state;
+  const msg = {
+    method: 'mcp-status',
+    state,
+    path: mcp.path,
+    problems: mcp.problems,
+    error
+  };
+  for (const port of mcp.statusPorts) {
+    try {
+      port.postMessage(msg);
+    }
+    catch (e) {
+      mcp.statusPorts.delete(port);
+    }
+  }
+};
+
+// live status channel between the worker and UIs (e.g. the options page)
+chrome.runtime.onConnect.addListener(port => {
+  if (port.name !== 'mcp-status') {
+    return;
+  }
+  mcp.statusPorts.add(port);
+  port.postMessage({
+    method: 'mcp-status',
+    state: mcp.state,
+    path: mcp.path,
+    problems: mcp.problems
+  });
+  port.onDisconnect.addListener(() => mcp.statusPorts.delete(port));
+});
 mcp.socket = async () => {
   const ua = navigator.userAgent;
   const isWindows = navigator.userAgentData?.platform === 'Windows' || navigator.platform.startsWith('Win');
@@ -34,7 +75,7 @@ mcp.tools = async () => {
   const prefs = await chrome.storage.local.get({
     'mcp-extensions': []
   });
-
+  mcp.problems = [];
   for (const id of prefs['mcp-extensions']) {
     try {
       const r = await chrome.runtime.sendMessage(id, {cmd: 'mcp.json'});
@@ -43,12 +84,41 @@ mcp.tools = async () => {
     }
     catch (e) {
       console.warn('MCP: cannot add tools for', id, e);
+      mcp.problems.push('Extension "' + id + '" did not respond to the "mcp.json" request: ' + (e?.message || e));
     }
+  }
+  mcp.setState('running', undefined);
+};
+
+// built-in test tool; open_page without a URL opens example.com
+const eab = {
+  open(args = {}, post) {
+    let url = args.url || 'https://example.com';
+    // only allow http(s) targets; anything else falls back to example.com
+    try {
+      const u = new URL(url);
+      if (['http:', 'https:'].includes(u.protocol)) {
+        url = u.href;
+      }
+      else {
+        url = 'https://example.com';
+      }
+    }
+    catch (e) {
+      url = 'https://example.com';
+    }
+    chrome.tabs.create({url}, tab => post({
+      opened: tab?.url || url,
+      tabId: tab?.id,
+      browser: navigator.userAgent,
+      socket: mcp.path
+    }));
   }
 };
 
 mcp.install = async () => {
   mcp.extraTools = new Map();
+  mcp.problems = [];
   const socketPath = await mcp.socket();
   const oldSocketPath = mcp.path && mcp.path !== socketPath ? mcp.path : '';
   mcp.path = socketPath;
@@ -57,13 +127,18 @@ mcp.install = async () => {
     'mcp-log': false
   });
   mcp.log = prefs['mcp-log'];
+  mcp.setState('starting');
 
   const port = mcp.port = chrome.runtime.connectNative('com.add0n.node');
   const uuid = crypto.randomUUID();
 
   port.onDisconnect.addListener(() => {
-    console.error('MCP is disconnected', chrome.runtime.lastError);
+    const e = chrome.runtime.lastError;
+    console.error('MCP is disconnected', e);
     delete mcp.port;
+    mcp.extraTools?.clear();
+    mcp.problems = ['The MCP server was disconnected' + (e?.message ? ': ' + e.message : '') + '. Check the Native Integration tab.'];
+    mcp.setState('stopped', e?.message);
   });
   port.onMessage.addListener(request => {
     if (request.cmd === 'async.run') {
@@ -89,7 +164,10 @@ mcp.install = async () => {
         });
       };
 
-      if (request.params.name === 'chrome_send_message') {
+      if (request.params.name === 'open_page') {
+        return eab.open(request.params.arguments, post);
+      }
+      else if (request.params.name === 'chrome_send_message') {
         extensionId = request.params.arguments.extensionId;
         message = request.params.arguments.message;
       }
@@ -137,6 +215,7 @@ mcp.install = async () => {
     else if (request.type === 'report' || request.cmd === 'report') {
       if (request.state === 'socket-ready') {
         console.info('MCP server is ready. Unix socket path:', socketPath);
+        mcp.setState('running');
         // the socket is up; fetch extra tools and pass them to the script
         mcp.tools().then(() => port.postMessage({
           cmd: 'post-message',
@@ -190,12 +269,24 @@ const tools = [{
     },
     required: ["extensionId", "message"]
   }
+}, {
+  name: "open_page",
+  description: "Open a URL in a new tab of this browser. Useful for testing the MCP integration or showing a page to the user. If no URL is provided, https://example.com is opened.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      url: { type: "string", description: "The URL to open (optional, defaults to https://example.com)" }
+    }
+  }
 }];
+
+// number of built-in tools; extra tools received from the extension are appended
+const builtinTools = tools.length;
 
 // receive extra tools from the extension once they are loaded
 connect(msg => {
   if (msg.cmd === "set-tools" && Array.isArray(msg.tools)) {
-    tools.length = 1;
+    tools.length = builtinTools;
     for (const tool of msg.tools) {
       tools.push(tool);
     }
@@ -232,7 +323,11 @@ function handleRequest(req, uuid) {
   switch (method) {
     case "initialize":
       return rpc.message(id, {
-        protocolVersion: "2025-11-25",
+        // Best practice: accept the client's requested protocol version if
+        // provided, otherwise advertise our own.
+        protocolVersion: typeof req.params?.protocolVersion === 'string'
+          ? req.params.protocolVersion
+          : "2025-11-25",
         capabilities: {
           tools: {}
         },
@@ -369,4 +464,6 @@ mcp.uninstall = () => {
   mcp.port?.disconnect();
   delete mcp.port;
   delete mcp.extraTools;
+  mcp.problems = [];
+  mcp.setState('off');
 };

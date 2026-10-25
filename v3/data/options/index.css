@@ -437,13 +437,6 @@ body[data-os="linux"] .win {
   overflow: auto;
   padding-right: 5px;
 }
-#triggers:empty:before {
-  content: 'Use "Add new Trigger" button to create a new trigger';
-  height: 100%;
-  display: grid;
-  place-items: center;
-  font-size: 120%;
-}
 .trigger {
   display: grid;
   grid-gap: 5px;
@@ -460,4 +453,51 @@ body[data-os="linux"] .win {
 }
 #triggers-toast {
   color: #07c;
+}
+
+/* MCP tab */
+#mcp-guard {
+  color: #b00;
+  background-color: #fff0f0;
+  border: solid 1px #f3c3c3;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+#mcp-problems {
+  color: #a06000;
+  background-color: #fffbe8;
+  white-space: pre-wrap;
+  padding: 5px 10px;
+  margin-block: 10px;
+}
+#mcp-problems div {
+  margin: 4px 0;
+}
+.mcp-help {
+  margin-top: 20px;
+  border-top: solid 1px #e3e3e3;
+  padding-top: 5px;
+}
+.mcp-help h4 {
+  margin: 12px 0 4px 0;
+  color: #333;
+}
+.mcp-help p {
+  margin: 4px 0;
+}
+.mcp-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.mcp-path code {
+  word-break: break-all;
+}
+#mcp-copy {
+  flex-shrink: 0;
+}
+#mcp-copy-feedback {
+  color: #1d671d;
+  white-space: nowrap;
 }

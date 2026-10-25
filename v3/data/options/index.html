@@ -158,21 +158,51 @@
       <section id="tab-mcp" hidden>
         <div>
           <h3>MCP (Model Context Protocol) Server (experimental)</h3>
+          <div id="mcp-status" class="status" data-state="unknown">Server status: unknown</div>
+          <div id="mcp-guard" hidden>
+            <div>MCP requires the native client to run. Your native client is either missing or too old.</div>
+            <div style="margin-top: 5px;">
+              <input type="button" value="Check / Install" id="mcp-native-goto" title="Go to the Native Integration tab to check or install the native client">
+              <input type="button" value="Download Native Client" id="mcp-native-download" title="Download the latest native-client installer package for your operating system from GitHub">
+            </div>
+          </div>
           <div class="two">
             <span>Enabled</span>
-            <label><input type="checkbox" id="mcp-server"> Act as an MCP server</label>
+            <div>
+              <label><input type="checkbox" id="mcp-server"> Act as an MCP server</label>
+              <div class="note" id="mcp-enable-hint" hidden>Cannot run without a native client version 1.1.0 or higher. See the panel above to fix this first.</div>
+            </div>
             <span>Logs</span>
-            <label><input type="checkbox" id="mcp-log"> Show MPC communication reports on browser console</label>
+            <label><input type="checkbox" id="mcp-log"> Show MCP communication reports on browser console</label>
             <span class="nowrap">Socket postfix</span>
             <input type="text" id="mcp-socket-postfix" placeholder="Optional custom postfix for the socket path (e.g. profile name). Letters, digits, dots, dashes and underscores only.">
             <span class="nowrap">Extension IDs</span>
             <input type="text" id="mcp-extensions" placeholder="Comma-separated list of available extension IDs that support MCP communication.">
           </div>
-          <div class="note">When enabled, code agents like OpenCode can interact with this extension through the Unix domain socket at <code id="mcp-socket">/tmp/exb-chrome.sock</code> and with other extensions exposing tools via the <code>mcp.json</code> command. Refer to the <a data-href="faq36" target="_blank">FAQs page</a> for integration details. Set a socket postfix to run a separate socket on each profile of the same browser.
-
-MCP communication requires Native Client version 1.1.0 or higher. Please ensure you have a compatible version installed.
-
-Make sure to restart the agent after this feature is turned on.</div>
+          <div id="mcp-problems" hidden></div>
+          <div class="mcp-help">
+            <div>
+              <h4>What is this?</h4>
+              <p>When enabled, this extension acts as a local MCP (Model Context Protocol) server so coding agents like OpenCode or Claude Code can call this extension's tools (and tools of other MCP-aware extensions) securely on this machine.</p>
+            </div>
+            <div>
+              <h4>Connect your agent</h4>
+              <p>Point your agent to the Unix domain socket path below (see the <a data-href="faq36" target="_blank">FAQs page</a> for integration details). Make sure to restart the agent after this feature is turned on.</p>
+              <p>To verify the integration, ask your agent to call <code>open_page</code> without arguments to open <code>https://example.com</code> in a new tab of this browser.</p>
+              <div class="mcp-path">
+              <div class="mcp-path">
+                <span>Socket path:</span>
+                <code id="mcp-socket">/tmp/exb-chrome.sock</code>
+                <input type="button" value="Copy" id="mcp-copy">
+                <span id="mcp-copy-feedback" hidden>Copied!</span>
+              </div>
+              <div class="note" id="mcp-path-mismatch" hidden>The running server uses a different socket path than the one above. Disable and re-enable the server (or change the socket postfix) to apply the new path.</div>
+            </div>
+            <div>
+              <h4>Requirements</h4>
+              <p>The native client version 1.1.0 or higher is required (see the "<a href="#" data-tab="native">Native Integration</a>" tab). Also restart your agent after enabling this feature.</p>
+            </div>
+          </div>
         </div>
       </section>
       <section id="tab-misc" hidden>
@@ -212,6 +242,7 @@ Make sure to restart the agent after this feature is turned on.</div>
         <div class="note">The "native client" is a small open-source NodeJS-based helper that connects the browser to your external applications (required for running commands and for the MCP server). If a system NodeJS is detected, it will be used; otherwise the package ships a portable version. The MCP Server requires native client version 1.1.0 or higher. To install manually, browse <a target="_blank" href="https://github.com/andy-portmen/native-client/releases">all releases</a>. To uninstall, run <code class="nix">./uninstall.sh</code><code class="win">uninstall.bat</code> from the extracted directory.</div>
       </section>
       <section id="tab-triggers" hidden>
+        <h3>Use "Add new Trigger" button to create a new trigger</h3>
         <template id="trigger-template">
           <div class="trigger">
             <input type="checkbox">
