@@ -166,7 +166,16 @@ function download(url) {
   });
 }
 
+let updateQueue = Promise.resolve();
 function update() {
+  // Storage changes can arrive back-to-back during import (clear, then set).
+  // Serialize rebuilds so one removeAll() cannot race another rebuild.
+  updateQueue = updateQueue
+    .catch(e => console.error('Previous context-menu update failed', e))
+    .then(() => new Promise(resolve => updateOnce(resolve)));
+  return updateQueue;
+}
+function updateOnce(done) {
   chrome.storage.local.get({
     apps: {},
     active: null
@@ -210,6 +219,24 @@ function update() {
     };
 
     chrome.contextMenus.removeAll(() => {
+      const pendingCreates = [];
+      function create(obj) {
+        pendingCreates.push(new Promise(resolve => {
+          try {
+            chrome.contextMenus.create(obj, () => {
+              const lastError = chrome.runtime.lastError;
+              if (lastError) {
+                console.warn(lastError);
+              }
+              resolve(!lastError);
+            });
+          }
+          catch (e) {
+            console.warn(e);
+            resolve(false);
+          }
+        }));
+      }
       const ids = Object.keys(prefs.apps).filter(k => {
         const context = prefs.apps[k].context;
         if (!context) {
@@ -243,12 +270,7 @@ function update() {
         function add(obj) {
           obj.contexts = obj.contexts.filter(k => chrome.contextMenus.ContextType[k.toUpperCase()]);
           log(obj);
-          chrome.contextMenus.create(obj, () => {
-            const lastError = chrome.runtime.lastError;
-            if (lastError) {
-              console.warn(lastError);
-            }
-          });
+          create(obj);
         }
 
         const documentUrlPatterns = prefs.apps[id].filters.split(/\s*,\s*/).filter(a => a);
@@ -288,20 +310,21 @@ ${e.message}`);
       bi.sort(sorted);
 
       bi.forEach((id, index) => {
-        chrome.contextMenus.create({
+        create({
           id: 'change-to-' + id,
           title: prefs.apps[id].name,
           contexts: ['action'],
           parentId: (index > 4 && bi.length > 6) ? 'extra' : undefined
         });
         if (index === 4 && bi.length > 6) {
-          chrome.contextMenus.create({
+          create({
             title: 'Extra Applications',
             id: 'extra',
             contexts: ['action']
           });
         }
       });
+      Promise.all(pendingCreates).then(results => done(results.every(Boolean)));
     });
     self.navigate();
   });
@@ -468,6 +491,13 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   else if (request.method === 'notify') {
     notify(request.message);
+  }
+  else if (request.method === 'refresh-context-menus') {
+    update().then(response, e => {
+      console.error('Could not refresh context menus after importing settings', e);
+      response(false);
+    });
+    return true;
   }
   else if (request.method === 'execute') {
     chrome.storage.local.get({
