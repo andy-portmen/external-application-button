@@ -246,21 +246,24 @@ document.addEventListener('click', e => {
       chrome.storage.local.set(prefs, update);
     });
   }
-  else if (cmd === 'insert') {
-    const text = target.dataset.value;
-    const startPos = form.args.selectionStart;
-    const endPos = form.args.selectionEnd;
-    form.args.value = form.args.value.substring(0, startPos) +
-      text +
-      form.args.value.substring(endPos, form.args.value.length);
-    form.args.selectionStart = startPos + text.length;
-    form.args.selectionEnd = startPos + text.length;
-    form.args.focus();
-  }
-  else if (cmd === 'example') {
-    form.name.value = target.dataset.name;
-    form.path.value = target.dataset.path;
-    form.args.value = target.dataset.args;
+  else if (cmd === 'insert' || cmd === 'example') {
+    target.closest('[popover]')?.hidePopover();
+    if (cmd === 'insert') {
+      const text = target.dataset.value;
+      const startPos = form.args.selectionStart;
+      const endPos = form.args.selectionEnd;
+      form.args.value = form.args.value.substring(0, startPos) +
+        text +
+        form.args.value.substring(endPos, form.args.value.length);
+      form.args.selectionStart = startPos + text.length;
+      form.args.selectionEnd = startPos + text.length;
+      form.args.focus();
+    }
+    else {
+      form.name.value = target.dataset.name;
+      form.path.value = target.dataset.path;
+      form.args.value = target.dataset.args;
+    }
   }
   else if (cmd === 'test') {
     testArguments();

@@ -24,7 +24,8 @@ h3 {
   padding: 10px;
 }
 input[type="submit"],
-input[type="button"] {
+input[type="button"],
+button.placeholder {
   height: 28px;
   color: rgb(68, 68, 68);
   background-image: linear-gradient(rgb(237, 237, 237), rgb(237, 237, 237) 38%, rgb(222, 222, 222));
@@ -40,6 +41,7 @@ select {
 }
 select,
 input[type="button"],
+button.placeholder,
 input[type="number"],
 input[type="text"] {
   height: 28px;
@@ -69,7 +71,8 @@ textarea:focus,
 input[type="text"]:focus {
   background-color: #e9f3ff;
 }
-input[type="button"] {
+input[type="button"],
+button.placeholder {
   background-color: #fff;
   line-height: 8px;
   outline: none;
@@ -169,7 +172,7 @@ a:visited {
 }
 #misc {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px 5px;
   align-items: center;
 }
@@ -209,6 +212,16 @@ a:visited {
   #app > .gc1 {
     white-space: unset;
     overflow-wrap: anywhere;
+  }
+  #misc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #misc .gc1,
+  #misc .gc2 {
+    grid-column: 1;
+  }
+  #misc .gc2 {
+    justify-self: start;
   }
 }
 #placement-tabs {
@@ -280,37 +293,52 @@ label {
 label input[type="checkbox"] {
   margin-right: 5px;
 }
-.placeholder {
-  background: url('down.svg') right -2px center no-repeat;
-  background-size: 13px;
-  padding-right: 2px;
-  cursor: pointer;
-  position: relative;
+button.placeholder {
+  padding: 0 18px 0 6px;
+  background: url('down.svg') right 2px center / 13px 13px no-repeat, linear-gradient(rgb(237, 237, 237), rgb(237, 237, 237) 38%, rgb(222, 222, 222)) 0 0 / 100% 100% no-repeat;
+  font-size: 12px;
 }
-.placeholder > ul {
-  position: absolute;
-  top: 15px;
-  right: 0;
-  background-color: #fff;
+#app [popovertarget="examples-menu"] {
+  anchor-name: --examples-menu;
+}
+#app [popovertarget="reserved-menu"] {
+  anchor-name: --reserved-menu;
+}
+#examples-menu {
+  position-anchor: --examples-menu;
+}
+#reserved-menu {
+  position-anchor: --reserved-menu;
+}
+#reserved-menu li {
+  width: 260px;
+  white-space: nowrap;
+}
+[popover] {
+  position: fixed;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin: 3px 0 0 0;
   border: solid 1px #ccc;
+  background-color: #fff;
+  padding: 2px 0;
+}
+[popover] > ul {
   list-style: none;
   margin: 0;
   padding: 0;
   text-align: left;
-  display: none;
-  z-index: 2;
 }
-.placeholder li {
-  padding: 2px 0 2px 5px;
+[popover] li {
+  padding: 2px 8px 2px 5px;
   width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
-.placeholder li:hover {
+[popover] li:hover {
   background-color: rgba(0, 0, 0, 0.1);
-}
-.placeholder:hover ul {
-  display: block;
 }
 [hbox] {
   display: flex;

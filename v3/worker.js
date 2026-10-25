@@ -407,6 +407,10 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
       }
       extrap = btoa(binaryString);
     }
+    let extraraw = '';
+    if (/\[EXTRA-RAW\]/.test(app.args)) {
+      extraraw = quote(extra || '');
+    }
 
     const termref = {
       lineBuffer: ''
@@ -415,6 +419,7 @@ async function argv(app, url, selectionText, tab, pre, extra = '') {
     termref.lineBuffer = app.args
       .replace(/\\/g, '\\\\') // what if args include "\d"
       .replace(/\[EXTRA\]/g, extrap)
+      .replace(/\[EXTRA-RAW\]/g, extraraw)
       .replace(/\[TITLE\]/g, quote(tab.title))
       .replace(/\[HREF\]/g, url.href)
       .replace(/\[HOSTNAME\]/g, url.hostname)

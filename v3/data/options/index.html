@@ -31,7 +31,8 @@
 
           <label for="f-path" class="gc1">Executable Name</label>
           <input type="text" id="f-path" data-id="path" class="gc2" placeholder="Absolute path of the executable. To skip, fill the box with '[SKIP]' keyword.">
-          <div class="placeholder gc3">&nbsp;Examples
+          <button type="button" class="placeholder gc3" popovertarget="examples-menu">Examples</button>
+          <div popover id="examples-menu">
             <ul>
               <li data-name="Open in Firefox" data-path="%ProgramFiles%\Mozilla Firefox\firefox.exe" data-args="[HREF]"  data-cmd="example">Open in Firefox (Windows)</li>
               <li data-name="Open in Firefox" data-path="open" data-args="-a firefox [HREF]"  data-cmd="example">Open in Firefox (Mac)</li>
@@ -51,7 +52,8 @@
             <input type="text" id="f-arguments" data-id="arguments" placeholder="Command-line arguments for the executable. Add @stdin to send the variable to the process's standard input.">
             <input type="button" value="Test" data-cmd="test" id="test" title="Validate the Arguments field only: see the final list of arguments that is sent to the external executable">
           </div>
-          <div class="placeholder gc3">&nbsp;Reserved
+          <button type="button" class="placeholder gc3" popovertarget="reserved-menu">Reserved</button>
+          <div popover id="reserved-menu">
                 <ul>
                   <li data-value="[HREF]" data-cmd="insert" title="Entire URL (page, image, ...)">Entire URL (page, image, ...)</li>
                   <li data-value="[TITLE]" data-cmd="insert" title="Page Title">Page Title</li>
@@ -69,6 +71,7 @@
                   <li data-value="[PRE_SCRIPT:0]" data-cmd="insert" title="Get the first output of the pre-script array">Get the first output of the pre-script array</li>
                   <li data-value="[PRE_SCRIPT:1]" data-cmd="insert" title="Get the second output of the pre-script array">Get the second output of the pre-script array</li>
                   <li data-value="[EXTRA]" data-cmd="insert" title="Insert extra info in JSON format encoded in base64">Extra info</li>
+                  <li data-value="[EXTRA-RAW]" data-cmd="insert" title="Insert extra info in JSON format (raw, not base64-encoded)">Extra info (raw)</li>
             </ul>
           </div>
 
@@ -146,12 +149,12 @@
             </select>
           </label>
         </div>
-        <div hbox pack=center class="gap">
+        <p hbox pack=center class="gap">
           <span>List of applications:</span>
           <select flex="1" id="list"></select>
           <input type="button" value="Remove" disabled="true" id="remove" data-cmd="remove">
           <input type="button" value="Add Application" data-cmd="add" id="add">
-        </div>
+        </p>
         <div id="message" class="note"></div>
         <div class="note" style="margin-top: 10px">To change the active application in the browser toolbar area, use the right-click context menu over the toolbar button.</div>
       </section>
@@ -211,7 +214,7 @@
           <label class="gc1" for="faqs">FAQs page</label>
           <label class="gc2"><input type="checkbox" id="faqs"> Open FAQs page on updates</label>
           <label class="gc1" for="exaccess">External access</label>
-          <label class="gc2"><input type="checkbox" id="exaccess"> Allow other extensions to run native commands (<b>use with caution</b>) (you will get a confirmation box on every new requests)</label>
+          <label class="gc2"><input type="checkbox" id="exaccess"> <div>Allow other extensions to run native commands (<b>use with caution</b>) (you will get a confirmation box on every new requests)</div></label>
         </div>
         <div style="margin-top: 10px;">
           <div>
@@ -222,6 +225,7 @@
           <div style="margin-bottom: 10px;">
             <input type="button" value="Tabs Permission" id="tabs-permission" title="Use this button to allow the extension to access browser tabs even when the tab is not focused. This is useful if you want to use triggers on download start or end to run external applications.">
           </div>
+          <div class="note" style="margin-top: 10px;">Tabs Permission: Use this button to allow the extension to access browser tabs even when the tab is not focused. This is useful if you want to use triggers on download start or end to run external applications.</div>
           <div>
             <input type="button" value="Clear Blocked List" data-cmd="clear" id="clear" title="This will clear the blocked list of extensions that want to send commands using this extension">
           </div>
@@ -263,7 +267,7 @@
               <hr>
               <option value="js">Run JavaScript</option>
             </select>
-            <textarea rows="5" disabled placeholder="This script runs on every page. When 'document.currentScript.output' returns a value, the external application is executed and the returned value is provided in [EXTRA] argument."></textarea>
+            <textarea rows="5" disabled placeholder="This script runs on every page. When 'document.currentScript.output' returns a value, the external application is executed and the returned value is provided in [EXTRA] (base64-encoded) or [EXTRA-RAW] (raw) argument."></textarea>
           </div>
         </template>
         <div id="triggers"></div>
