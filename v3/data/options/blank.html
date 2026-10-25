@@ -3,12 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- rendered inside a "container-type: inline-size" wrapper, so cqw units scale with the iframe's real width -->
   <style type="text/css">
-    font-family: "Helvetica Neue",Helvetica,sans-serif;
-    font-size: 13px;
+    body {
+      margin: 0;
+      padding: 1cqw 2cqw;
+      box-sizing: border-box;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      font-size: clamp(12px, 4cqw, 15px);
+      color: #4d5156;
+      background-color: #fff;
+    }
+    ul {
+      margin: 0;
+      padding-inline-start: 2.5em;
+    }
+    li {
+      padding: 0.5cqw 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    header {
+      border-bottom: solid 1px #ccc;
+      margin-bottom: 1cqw;
+    }
+    header h1 {
+      font-size: 1.1em;
+      margin: 0.5cqw 0;
+    }
+    header p {
+      font-size: 0.85em;
+      color: #787878;
+      margin: 0 0 0.5cqw 0;
+    }
   </style>
 </head>
 <body>
-
+  <header>
+    <h1>Arguments sent to the external application</h1>
+    <p>One argument per row. If a "single" argument shows up as multiple rows, use quotes around it.</p>
+  </header>
+  <div id="args"></div>
 </body>
 </html>

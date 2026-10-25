@@ -4,7 +4,6 @@ const app = document.getElementById('app');
 const list = document.getElementById('list');
 const message = document.getElementById('message');
 const remove = document.getElementById('remove');
-const add = document.getElementById('add');
 const preview = document.getElementById('preview');
 const form = {
   path: app.querySelector('[data-id=path]'),
@@ -31,15 +30,16 @@ const form = {
 if (typeof chrome.contextMenus.ContextType !== 'undefined') {
   [...document.querySelectorAll('[data-id=context] input[type=checkbox]')].forEach(e => {
     if (chrome.contextMenus.ContextType[e.value.toUpperCase()] === undefined) {
-      e.closest('tr').classList.add('hidden');
+      e.closest('label').classList.add('hidden');
     }
   });
 }
 
 let id;
 
-function show(msg) {
+function show(msg, type = 'error') {
   clearTimeout(id);
+  message.dataset.type = type;
   message.textContent = msg;
   id = setTimeout(() => message.textContent = '', 5000);
 }
@@ -111,8 +111,45 @@ function save(o) {
     };
     chrome.storage.local.set(prefs, () => {
       update(id);
-      show('Done!');
+      show('Done!', 'success');
     });
+  });
+}
+
+function testArguments() {
+  // this test only cares about the Arguments field; no other form validation applies
+  const args = form.args.value;
+  if (args.trim() === '') {
+    return show('There is no argument to validate. Fill the "Arguments" box first.');
+  }
+
+  const o = {
+    name: form.name.value || 'test',
+    path: form.path.value || '[SKIP]',
+    args,
+    quotes: form.quotes.checked
+  };
+
+  chrome.runtime.sendMessage({
+    method: 'parse',
+    app: o
+  }, resp => {
+    // recreate the iframe: a document inside a closed dialog may not be ready
+    const container = preview.querySelector('.iframe-container');
+    container.querySelector('iframe')?.remove();
+    const frame = document.createElement('iframe');
+    frame.src = 'blank.html';
+    frame.title = 'Arguments preview';
+    frame.onload = () => {
+      const slot = frame.contentDocument.getElementById('args');
+      const ul = document.createElement('ul');
+      resp.forEach(s => ul.appendChild(Object.assign(frame.contentDocument.createElement('li'), {
+        textContent: s
+      })));
+      slot.replaceChildren(ul);
+      preview.showModal();
+    };
+    container.appendChild(frame);
   });
 }
 
@@ -135,6 +172,7 @@ function collect(callback) {
   const redirects = form.navigation.checked ? form.redirects.value : '';
   const index = form.index.valueAsNumber ? Math.max(form.index.valueAsNumber, 1) : '';
   if (!toolbar && !menuitem && redirects === '') {
+    activatePtab('toolbar');
     return show('Select a placement for this application, or configure automatic navigation');
   }
   const context = [...form.context.querySelectorAll(':checked')].map(e => e.value);
@@ -155,15 +193,34 @@ function collect(callback) {
   };
 
   if (icon) {
-    if (icon.size > 5 * 1024) {
-      return show('"Icon" is too big! use 16x16 PNG.');
+    if (!icon.type.startsWith('image/')) {
+      return show('Invalid image file!');
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      s.icon = reader.result;
+    // downscale the icon to 64x64 max to keep the storage entry small
+    const image = new Image();
+    const objectURL = URL.createObjectURL(icon);
+    image.onload = () => {
+      URL.revokeObjectURL(objectURL);
+      const size = 64;
+      const scale = Math.min(1, size / Math.max(image.naturalWidth || size, image.naturalHeight || size));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      try {
+        s.icon = canvas.toDataURL('image/png');
+      }
+      catch (e) {
+        console.error(e);
+        return show('Cannot process the icon image');
+      }
       callback(s);
     };
-    reader.readAsDataURL(icon);
+    image.onerror = () => {
+      URL.revokeObjectURL(objectURL);
+      show('Invalid image file!');
+    };
+    image.src = objectURL;
   }
   else {
     s.icon = app.dataset.file;
@@ -206,21 +263,7 @@ document.addEventListener('click', e => {
     form.args.value = target.dataset.args;
   }
   else if (cmd === 'test') {
-    collect(app => {
-      chrome.runtime.sendMessage({
-        method: 'parse',
-        app
-      }, resp => {
-        const doc = preview.contentDocument;
-        doc.body.textContent = '';
-        const ul = document.createElement('ul');
-        resp.forEach(s => ul.appendChild(Object.assign(doc.createElement('li'), {
-          textContent: s
-        })));
-        doc.body.appendChild(ul);
-        preview.style.display = 'block';
-      });
-    });
+    testArguments();
   }
   else if (cmd === 'clear') {
     chrome.storage.local.set({
@@ -233,14 +276,17 @@ document.addEventListener('click', e => {
   }
 });
 
-document.body.addEventListener('click', () => {
-  preview.style.display = 'none';
+// close the dialog on clicks outside its content (backdrop)
+preview.addEventListener('click', ({target}) => {
+  if (target === preview) {
+    preview.close();
+  }
 });
 
 list.addEventListener('change', () => {
   const disabled = list.selectedIndex === -1 || list.selectedIndex === 0;
   remove.disabled = disabled;
-  add.value = disabled ? 'Add Application' : 'Update Application';
+  add.value = disabled ? 'Add Application' : 'Edit Application';
 
   chrome.storage.local.set({
     save: list.value
@@ -453,7 +499,7 @@ for (const a of [...document.querySelectorAll('[data-href]')]) {
 }
 
 // tabs permission
-document.getElementById('tabs').onclick = e => chrome.permissions.request({
+document.getElementById('tabs-permission').onclick = e => chrome.permissions.request({
   permissions: ['tabs'],
   origins: ['*://*/*']
 }, granted => {
@@ -467,7 +513,131 @@ chrome.permissions.contains({
   origins: ['*://*/*']
 }, granted => {
   if (granted) {
-    document.getElementById('tabs').remove();
+    document.getElementById('tabs-permission').remove();
   }
 });
+
+// native integration
+const nativeStatus = document.getElementById('native-status');
+const nativeApp = 'com.add0n.node';
+
+{
+  const ua = navigator.userAgent;
+  if (ua.indexOf('Mac') !== -1 || ua.indexOf('Linux') !== -1 || ua.indexOf('X11') !== -1) {
+    document.body.dataset.os = 'linux';
+  }
+  else {
+    document.body.dataset.os = 'windows';
+  }
+}
+
+function setNativeStatus(state, message, version) {
+  nativeStatus.dataset.state = state;
+  nativeStatus.textContent = message;
+  if (version) {
+    const versions = version.split('.').map(Number);
+    const major = versions[0] * 100 + (versions[1] || 0) * 10 + (versions[2] || 0);
+    if (major < 110) {
+      nativeStatus.dataset.state = 'warn';
+      nativeStatus.textContent += '. The MCP Server requires version 1.1.0 or higher. Please update the native client!';
+    }
+  }
+}
+
+function checkNativeClient() {
+  setNativeStatus('unknown', 'Checking the native client…');
+  chrome.runtime.sendNativeMessage(nativeApp, {
+    cmd: 'version'
+  }, response => {
+    const lastError = chrome.runtime.lastError;
+    if (lastError) {
+      console.warn(lastError);
+      return setNativeStatus('error', 'Native client is not detected. Follow the steps below to install it');
+    }
+    if (response) {
+      return setNativeStatus('ok', 'Native client version ' + response.version + ' is installed', response.version);
+    }
+    setNativeStatus('error', 'Native client is not detected. Follow the steps below to install it');
+  });
+}
+
+document.getElementById('native-check').addEventListener('click', checkNativeClient);
+
+document.getElementById('native-download').addEventListener('click', () => {
+  const os = document.body.dataset.os || 'windows';
+
+  setNativeStatus('unknown', 'Looking for the latest version of the native client…');
+
+  const req = new XMLHttpRequest();
+  req.open('GET', 'https://api.github.com/repos/andy-portmen/native-client/releases/latest');
+  req.responseType = 'json';
+  req.onload = () => {
+    try {
+      const asset = req.response.assets.filter(a => a.name === os + '.zip')[0];
+      chrome.downloads.download({
+        filename: os + '.zip',
+        url: asset.browser_download_url
+      }, () => {
+        const lastError = chrome.runtime.lastError;
+        if (lastError) {
+          console.warn(lastError);
+          return setNativeStatus('error', 'Cannot initiate the download. Please download the package manually from GitHub releases');
+        }
+        setNativeStatus('ok', 'Download is started. Extract and install when it is done');
+      });
+    }
+    catch (e) {
+      console.warn(e);
+      setNativeStatus('error', 'Something went wrong! Please download the package manually from GitHub releases');
+    }
+  };
+  req.onerror = () => setNativeStatus('error', 'Something went wrong! Please download the package manually from GitHub releases');
+  req.send();
+});
+
+checkNativeClient();
+
+// tab navigation
+const tabButtons = [...document.querySelectorAll('#tabs button')];
+const tabSections = new Map(tabButtons.map(b => [b.dataset.tab, document.getElementById('tab-' + b.dataset.tab)]));
+
+function activateTab(tab, setHash = true) {
+  if (!tabSections.has(tab)) {
+    tab = 'app';
+  }
+  tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  tabSections.forEach((s, key) => s.hidden = key !== tab);
+  if (setHash) {
+    history.replaceState(null, '', '#' + tab);
+  }
+}
+
+tabButtons.forEach(b => b.addEventListener('click', () => {
+  activateTab(b.dataset.tab);
+  if (b.dataset.tab === 'native') {
+    checkNativeClient();
+  }
+}));
+
+window.addEventListener('hashchange', () => activateTab(location.hash.slice(1), false));
+
+const initialTab = location.hash.slice(1);
+activateTab(initialTab, false);
+
+// placement sub-tabs
+const ptabButtons = [...document.querySelectorAll('#placement-tabs button')];
+const ptabPanels = new Map(ptabButtons.map(b => [b.dataset.ptab, document.getElementById('ptab-' + b.dataset.ptab)]));
+
+function activatePtab(tab) {
+  if (!ptabPanels.has(tab)) {
+    tab = 'toolbar';
+  }
+  ptabButtons.forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+  ptabPanels.forEach((p, key) => p.hidden = key !== tab);
+}
+
+ptabButtons.forEach(b => b.addEventListener('click', () => activatePtab(b.dataset.ptab)));
+
+// enforce the initial hidden state (in case the attributes are missing)
+activatePtab('toolbar');
 
